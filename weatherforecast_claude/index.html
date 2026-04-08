@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Washington State Weather</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
+<style>
+/* ── XP SYSTEM FONT ── */
+*{box-sizing:border-box;margin:0;padding:0;font-family:Tahoma,'MS Sans Serif',Arial,sans-serif;}
+html,body{width:100%;height:100%;overflow:hidden;background:#3a6ea5;}
+
+/* ── XP DESKTOP BG ── */
+#desktop{
+  width:100%;height:100%;
+  background: #3a6ea5;
+  display:flex;flex-direction:column;
+}
+
+/* ── TASKBAR ── */
+#taskbar{
+  height:30px;flex-shrink:0;
+  background:linear-gradient(to bottom,#2462b4 0%,#1952a4 4%,#1952a4 96%,#1040a0 100%);
+  border-top:1px solid #6090e0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4px;
+  position:relative;z-index:9999;
+  order:2;
+}
+#start-btn{
+  height:22px;padding:0 8px 0 4px;
+  background:linear-gradient(to bottom,#5cb85c 0%,#3a9a3a 45%,#2e862e 50%,#3a9a3a 100%);
+  border:1px solid #1a5a1a;
+  border-radius:0 10px 10px 0;
+  color:#fff;font-weight:bold;font-size:12px;
+  cursor:pointer;display:flex;align-items:center;gap:4px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset -1px 0 0 rgba(0,0,0,.2);
+  letter-spacing:.5px;
+}
+#start-btn:active{background:linear-gradient(to bottom,#2e862e,#3a9a3a);}
+#start-icon{font-size:14px;}
+#taskbar-center{display:flex;align-items:center;gap:3px;flex:1;padding:0 8px;}
+.tb-btn{
+  height:22px;padding:0 8px;font-size:11px;color:#fff;
+  background:linear-gradient(to bottom,#4a7abf,#2a5aaa);
+  border:1px solid #1a3a80;border-radius:2px;cursor:pointer;
+  white-space:nowrap;
+}
+.tb-btn.active{
+  background:linear-gradient(to bottom,#1a3a80,#2a5aaa);
+  border-color:#0a2060;box-shadow:inset 1px 1px 2px rgba(0,0,0,.3);
+}
+#tray{
+  display:flex;align-items:center;gap:6px;
+  background:linear-gradient(to bottom,#1952a4,#1040a0);
+  border:1px solid #6090e0;border-radius:3px;
+  padding:2px 8px;height:24px;
+}
+#tray-time{font-size:11px;color:#fff;letter-spacing:.3px;}
+
+/* ── WINDOW ── */
+#win{
+  flex:1;min-height:0;
+  margin:8px;
+  display:flex;flex-direction:column;
+  border:1px solid #003;
+  box-shadow:2px 2px 8px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.15);
+}
+
+/* TITLE BAR */
+#titlebar{
+  height:28px;flex-shrink:0;
+  background:linear-gradient(to bottom,
+    #4a90e0 0%,#2068c8 8%,#1458c0 45%,#1050b8 50%,#1560c8 55%,#2878d8 90%,#1458c0 100%
+  );
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4px 0 6px;
+  border-bottom:1px solid #003080;
+}
+#titlebar-left{display:flex;align-items:center;gap:5px;}
+#win-icon{font-size:14px;}
+#win-title{color:#fff;font-size:12px;font-weight:bold;text-shadow:1px 1px 2px rgba(0,0,0,.5);}
+#win-btns{display:flex;gap:2px;}
+.wbtn{
+  width:21px;height:19px;font-size:11px;font-weight:bold;
+  border:1px solid rgba(0,0,80,.5);border-radius:3px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset -1px 0 0 rgba(0,0,80,.3);
+  color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.4);
+}
+.wbtn-min{background:linear-gradient(to bottom,#80b8f0,#4888d8);}
+.wbtn-max{background:linear-gradient(to bottom,#80b8f0,#4888d8);}
+.wbtn-cls{background:linear-gradient(to bottom,#e05050,#b82020);}
+.wbtn:hover{filter:brightness(1.1);}
+.wbtn:active{filter:brightness(.9);box-shadow:inset 1px 1px 3px rgba(0,0,0,.4);}
+
+/* MENU BAR */
+#menubar{
+  height:22px;flex-shrink:0;
+  background:#ece9d8;
+  border-bottom:1px solid #aca899;
+  display:flex;align-items:center;padding:0 4px;
+}
+.menu-item{
+  padding:2px 8px;font-size:11px;color:#000;
+  border:1px solid transparent;border-radius:2px;cursor:pointer;
+  height:18px;display:flex;align-items:center;
+}
+.menu-item:hover{
+  background:linear-gradient(to bottom,#fff8e0,#f0c060);
+  border-color:#c0a030;
+}
+
+/* ADDRESS BAR */
+#addrbar{
+  height:26px;flex-shrink:0;
+  background:#ece9d8;border-bottom:1px solid #aca899;
+  display:flex;align-items:center;padding:2px 6px;gap:6px;
+}
+.addr-label{font-size:11px;color:#000;white-space:nowrap;}
+#addr-input{
+  flex:1;height:18px;font-size:11px;padding:1px 4px;
+  border:1px solid #7f9db9;border-radius:0;
+  background:#fff;color:#000;
+  box-shadow:inset 1px 1px 2px rgba(0,0,80,.2);
+}
+.xp-btn-small{
+  height:20px;padding:0 6px;font-size:11px;
+  background:linear-gradient(to bottom,#f0ede0,#d4d0c4);
+  border:1px solid #7f9db9;border-radius:2px;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset -1px -1px 0 rgba(0,0,0,.1);
+  color:#000;white-space:nowrap;
+}
+.xp-btn-small:active{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3);}
+.xp-btn-small.pressed{
+  background:linear-gradient(to bottom,#d4d0c4,#f0ede0);
+  box-shadow:inset 1px 1px 2px rgba(0,0,0,.3);
+}
+
+/* MAIN AREA */
+#mainarea{display:flex;flex:1;min-height:0;background:#fff;}
+
+/* LEFT PANEL (Explorer nav style) */
+#navpanel{
+  width:180px;flex-shrink:0;
+  background:#dce5f0;
+  border-right:1px solid #aca899;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+#navpanel-title{
+  background:linear-gradient(to bottom,#4a90e0,#2068c8);
+  color:#fff;font-size:11px;font-weight:bold;
+  padding:5px 8px;letter-spacing:.2px;
+  text-shadow:1px 1px 1px rgba(0,0,0,.4);
+}
+.nav-section{
+  background:#eef2f8;
+  border-bottom:1px solid #b8c8e0;
+  overflow:hidden;
+}
+.nav-section-hdr{
+  background:linear-gradient(to bottom,#c8d8f0,#a8c0e8);
+  font-size:11px;font-weight:bold;color:#003080;
+  padding:4px 8px;cursor:pointer;
+  border-bottom:1px solid #90a8d0;
+  display:flex;align-items:center;gap:4px;
+}
+.nav-item{
+  padding:4px 8px 4px 20px;font-size:11px;color:#003080;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  border-bottom:1px solid #d0dce8;
+  text-decoration:underline;
+}
+.nav-item:hover{background:#c8d8f8;color:#0000cc;}
+.nav-item.active{background:#b0c8f0;font-weight:bold;color:#000080;}
+.nav-item-icon{font-size:13px;flex-shrink:0;}
+#highlights-nav{padding:6px 6px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1;}
+.hl-chip{
+  background:#fff;border:1px solid #b8c8e0;
+  border-radius:2px;padding:3px 6px;font-size:10px;color:#000;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.hl-chip-name{color:#003080;font-weight:bold;}
+.hl-chip-temp{color:#c00000;font-weight:bold;}
+
+/* MAP + PANEL AREA */
+#content{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden;}
+#mapc{flex:1;position:relative;overflow:hidden;min-width:0;}
+#leafmap{position:absolute;inset:0;}
+
+/* XP STATUS / HINT */
+.xp-hint{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  background:#ffffcc;border:1px solid #c0a000;
+  padding:4px 12px;font-size:11px;color:#000;
+  box-shadow:2px 2px 4px rgba(0,0,0,.3);
+  pointer-events:none;z-index:500;white-space:nowrap;
+}
+
+/* SIDE PANEL (Detail pane) */
+#panel{
+  width:0;min-width:0;
+  background:#fff;
+  border-left:0px solid #aca899;
+  display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;
+  transition:width .25s ease,min-width .25s ease,border-left-width .25s;
+}
+#panel.open{width:300px;min-width:300px;border-left:1px solid #aca899;}
+#panel-inner{width:300px;display:flex;flex-direction:column;height:100%;overflow:hidden;}
+
+/* PANEL TITLE BAR */
+#ph{
+  background:linear-gradient(to bottom,#4a90e0,#2068c8);
+  padding:5px 8px;flex-shrink:0;position:relative;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#pcity{font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 1px rgba(0,0,0,.4);}
+#pregion{font-size:10px;color:#c8dff8;margin-top:1px;}
+#pclose{
+  background:linear-gradient(to bottom,#e05050,#b82020);
+  border:1px solid rgba(0,0,80,.5);border-radius:2px;
+  color:#fff;font-size:11px;font-weight:bold;
+  width:18px;height:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  flex-shrink:0;
+}
+#pclose:active{filter:brightness(.85);}
+#pscroll{
+  flex:1;overflow-y:auto;background:#fff;
+  scrollbar-width:thin;scrollbar-color:#b0c0d8 #ece9d8;
+}
+#pscroll::-webkit-scrollbar{width:16px;}
+#pscroll::-webkit-scrollbar-track{background:#ece9d8;border-left:1px solid #aca899;}
+#pscroll::-webkit-scrollbar-thumb{
+  background:linear-gradient(to right,#c8d8f0,#a8b8d8,#c8d8f0);
+  border:1px solid #8898b8;
+}
+
+/* GROUPBOX XP STYLE */
+.xp-group{
+  margin:8px;border:1px solid #90a8d0;
+  background:#f0f4f8;
+}
+.xp-group-title{
+  background:linear-gradient(to bottom,#c0d4f0,#a0b8e0);
+  font-size:11px;font-weight:bold;color:#003080;
+  padding:3px 8px;border-bottom:1px solid #90a8d0;
+}
+.xp-group-body{padding:8px;}
+
+/* CURRENT WEATHER */
+.cw-main{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.cw-temp{font-size:36px;font-weight:bold;color:#003080;}
+.cw-icon{font-size:40px;}
+.cw-desc{font-size:11px;color:#444;font-style:italic;}
+.cw-feels{font-size:11px;color:#666;margin-top:2px;}
+
+/* STAT GRID */
+.xp-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.xp-stat{
+  background:#fff;border:1px solid #90a8d0;
+  padding:5px 7px;
+}
+.xp-stat-lbl{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.3px;}
+.xp-stat-val{font-size:16px;font-weight:bold;color:#003080;margin-top:1px;}
+.xp-stat-sub{font-size:10px;color:#888;margin-top:1px;}
+
+/* LISTVIEW (forecast) */
+.xp-listview{border:1px solid #7f9db9;background:#fff;overflow:hidden;}
+.xp-lv-hdr{
+  display:flex;background:linear-gradient(to bottom,#e8e4d8,#d4d0c4);
+  border-bottom:1px solid #aca899;
+}
+.xp-lv-hdr-cell{
+  font-size:11px;font-weight:bold;color:#000;padding:2px 6px;
+  border-right:1px solid #aca899;flex:1;
+}
+.xp-lv-row{
+  display:flex;align-items:center;border-bottom:1px solid #e8e4d8;
+  font-size:11px;
+}
+.xp-lv-row:nth-child(odd){background:#f5f5f0;}
+.xp-lv-row:nth-child(even){background:#fff;}
+.xp-lv-row:hover{background:#d8e8f8;}
+.xp-lv-cell{padding:3px 6px;flex:1;border-right:1px solid #e8e4d8;color:#000;}
+.lv-hi{color:#c03000;font-weight:bold;}
+.lv-lo{color:#0060c0;font-weight:bold;}
+
+/* HOURLY STRIP */
+.xp-hourly{display:flex;gap:3px;overflow-x:auto;padding:4px;scrollbar-width:thin;}
+.xp-hourly::-webkit-scrollbar{height:12px;}
+.xp-hourly::-webkit-scrollbar-track{background:#ece9d8;border-top:1px solid #aca899;}
+.xp-hourly::-webkit-scrollbar-thumb{background:linear-gradient(to bottom,#c8d8f0,#a8b8d8);border:1px solid #8898b8;}
+.xp-hr{
+  flex-shrink:0;text-align:center;min-width:44px;
+  border:1px solid #7f9db9;background:#fff;padding:4px 3px;
+}
+.xp-hr:hover{background:#d8e8f8;}
+.xp-hr-time{font-size:10px;color:#003080;font-weight:bold;}
+.xp-hr-icon{font-size:15px;margin:2px 0;}
+.xp-hr-temp{font-size:11px;color:#c03000;font-weight:bold;}
+
+/* WIND BOX */
+.xp-wind{display:flex;align-items:center;gap:10px;}
+.xp-wspd{font-size:22px;font-weight:bold;color:#003080;}
+.xp-wunit{font-size:11px;color:#666;}
+.xp-wdir{font-size:11px;color:#444;}
+.xp-wcat{font-size:11px;color:#666;font-style:italic;}
+
+/* PROGRESS BAR (AQI) */
+.xp-progress-wrap{
+  border:1px solid #7f9db9;background:#fff;
+  height:16px;overflow:hidden;position:relative;
+}
+.xp-progress-fill{
+  height:100%;
+  background:linear-gradient(to bottom,
+    #60d060 0%,#60d060 33%,
+    #e0c040 33%,#e0c040 66%,
+    #e04040 66%,#e04040 100%
+  );
+  background-size:100% 300%;
+  transition:width .5s;
+}
+.xp-progress-good{background:linear-gradient(to bottom,#90e890,#40c040);}
+.xp-progress-mod{background:linear-gradient(to bottom,#f0d060,#c0a020);}
+.xp-progress-bad{background:linear-gradient(to bottom,#f08080,#c02020);}
+
+/* STATUS BAR */
+#statusbar{
+  height:22px;flex-shrink:0;
+  background:#ece9d8;border-top:2px solid #fff;
+  border-top:1px solid #aca899;
+  display:flex;align-items:center;padding:0 4px;gap:1px;
+}
+.sb-pane{
+  height:18px;flex:1;
+  border:1px solid #aca899;padding:0 6px;
+  font-size:11px;color:#000;display:flex;align-items:center;
+  background:#ece9d8;
+  box-shadow:inset 1px 1px 0 #fff;
+}
+
+/* LOADING */
+.ldst{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;}
+.xp-spinner{
+  width:32px;height:32px;
+  border:3px solid #c8d8f0;border-top:3px solid #2068c8;
+  border-radius:50%;animation:sp .8s linear infinite;
+}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* LEAFLET XP OVERRIDES */
+.leaflet-container{background:#b8cce4 !important;}
+.leaflet-tile{filter:saturate(0.7) brightness(0.85);}
+.leaflet-popup-content-wrapper{
+  background:#ffffcc;border:2px solid #c0a000;
+  border-radius:0;box-shadow:3px 3px 5px rgba(0,0,0,.4);
+}
+.leaflet-popup-tip{background:#ffffcc;}
+.leaflet-popup-content{margin:8px 12px;font-size:11px;color:#000;font-family:Tahoma,sans-serif;}
+.leaflet-control-zoom a{
+  background:linear-gradient(to bottom,#f0ede0,#d4d0c4) !important;
+  color:#000 !important;border-color:#7f9db9 !important;
+  font-weight:bold;font-family:Tahoma,sans-serif;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8) !important;
+}
+.leaflet-control-zoom a:hover{background:linear-gradient(to bottom,#fff8e0,#f0c060) !important;}
+.leaflet-bar{border:2px solid #7f9db9 !important;box-shadow:2px 2px 4px rgba(0,0,0,.3) !important;}
+.leaflet-control-attribution{display:none;}
+
+/* CITY MARKERS */
+.cmark{
+  width:13px;height:13px;
+  background:radial-gradient(circle at 35% 35%,#60a8ff,#0050c8);
+  border:2px solid #003080;border-radius:50%;cursor:pointer;
+  box-shadow:1px 1px 3px rgba(0,0,0,.4);
+  transition:transform .15s;
+}
+.cmark:hover{transform:scale(1.3);background:radial-gradient(circle at 35% 35%,#ffee60,#c0a000);border-color:#806000;}
+.cmark.act{
+  background:radial-gradient(circle at 35% 35%,#ff8060,#c82000);
+  border-color:#800000;width:15px;height:15px;margin:-1px;
+  box-shadow:0 0 6px rgba(200,0,0,.6);
+}
+</style>
+</head>
+<body>
+<div id="desktop">
+
+  <!-- WINDOW -->
+  <div id="win">
+
+    <!-- TITLE BAR -->
+    <div id="titlebar">
+      <div id="titlebar-left">
+        <span id="win-icon">🌤️</span>
+        <span id="win-title">Washington State Weather - Microsoft Internet Explorer</span>
+      </div>
+      <div id="win-btns">
+        <button class="wbtn wbtn-min" title="Minimize">_</button>
+        <button class="wbtn wbtn-max" title="Maximize">□</button>
+        <button class="wbtn wbtn-cls" title="Close">✕</button>
+      </div>
+    </div>
+
+    <!-- MENU BAR -->
+    <div id="menubar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">Edit</div>
+      <div class="menu-item">View</div>
+      <div class="menu-item">Favorites</div>
+      <div class="menu-item">Tools</div>
+      <div class="menu-item">Help</div>
+    </div>
+
+    <!-- ADDRESS BAR -->
+    <div id="addrbar">
+      <span class="addr-label">Address</span>
+      <input id="addr-input" type="text" value="http://weather.washington.gov/live/" readonly/>
+      <button class="xp-btn-small">Go</button>
+      <span style="font-size:13px;margin-left:4px;">🔍</span>
+    </div>
+
+    <!-- HIGHLIGHTS BAR -->
+    <div style="background:#ece9d8;border-bottom:1px solid #aca899;padding:3px 6px;display:flex;align-items:center;gap:6px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;">
+      <span style="font-size:10px;font-weight:bold;color:#003080;white-space:nowrap;">Live Conditions:</span>
+      <div id="hlbar" style="display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none;"></div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        <span style="font-size:11px;color:#000;">Units:</span>
+        <button class="xp-btn-small" id="bf" onclick="setU('F')" style="font-weight:bold;">°F</button>
+        <button class="xp-btn-small" id="bc" onclick="setU('C')">°C</button>
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div id="mainarea">
+
+      <!-- LEFT NAV PANEL -->
+      <div id="navpanel">
+        <div id="navpanel-title">📋 Washington Cities</div>
+        <div class="nav-section">
+          <div class="nav-section-hdr">▼ 🏆 Highlights</div>
+          <div id="highlights-nav">
+            <div class="hl-chip"><span style="color:#666;font-size:10px;">Loading…</span></div>
+          </div>
+        </div>
+        <div class="nav-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <div class="nav-section-hdr">▼ 🗺️ All Cities</div>
+          <div style="overflow-y:auto;flex:1;" id="city-nav"></div>
+        </div>
+      </div>
+
+      <!-- CONTENT (MAP + PANEL) -->
+      <div id="content">
+        <div id="mapc">
+          <div id="leafmap"></div>
+          <div class="xp-hint" id="hint">💡 Click a city marker on the map to view detailed weather information</div>
+        </div>
+
+        <!-- DETAIL PANEL -->
+        <div id="panel">
+          <div id="panel-inner">
+            <div id="ph">
+              <div>
+                <div id="pcity">—</div>
+                <div id="pregion">Washington State</div>
+              </div>
+              <button id="pclose" onclick="closeP()">✕</button>
+            </div>
+            <div id="pscroll">
+              <div class="ldst" id="pload">
+                <div class="xp-spinner"></div>
+                <span style="font-size:11px;color:#003080;">Connecting to weather server…</span>
+              </div>
+              <div id="pcont" style="display:none;padding-bottom:12px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div id="statusbar">
+      <div class="sb-pane" style="flex:2;" id="sb-main">Ready</div>
+      <div class="sb-pane" style="flex:1;" id="sb-clk">--:--:-- PT</div>
+      <div class="sb-pane" style="flex:1;">🌐 Internet</div>
+    </div>
+
+  </div>
+
+  <!-- TASKBAR -->
+  <div id="taskbar">
+    <button id="start-btn"><span id="start-icon">🪟</span> start</button>
+    <div id="taskbar-center">
+      <button class="tb-btn active">🌤️ Washington State Weather</button>
+    </div>
+    <div id="tray">
+      <span style="font-size:13px;">🔊</span>
+      <span style="font-size:13px;">🌐</span>
+      <span id="tray-time">--:--</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<script>
+const CITIES=[
+  {name:'Seattle',region:'King County',lat:47.6062,lon:-122.3321},
+  {name:'Spokane',region:'Eastern WA',lat:47.6588,lon:-117.426},
+  {name:'Tacoma',region:'Pierce County',lat:47.2529,lon:-122.4443},
+  {name:'Olympia',region:'State Capital',lat:47.0379,lon:-122.9007},
+  {name:'Bellingham',region:'Whatcom County',lat:48.7519,lon:-122.4787},
+  {name:'Yakima',region:'Central WA',lat:46.6021,lon:-120.5059},
+  {name:'Tri-Cities',region:'SE Washington',lat:46.2396,lon:-119.1006},
+  {name:'Mt Vernon',region:'Skagit County',lat:48.4201,lon:-122.334},
+  {name:'Wenatchee',region:'Central WA',lat:47.4235,lon:-120.3103},
+  {name:'Port Angeles',region:'Olympic Peninsula',lat:48.1181,lon:-123.4307},
+  {name:'Walla Walla',region:'SE Washington',lat:46.0646,lon:-118.343},
+  {name:'Pullman',region:'Palouse',lat:46.7298,lon:-117.1817},
+  {name:'Ellensburg',region:'Kittitas County',lat:46.9965,lon:-120.5478},
+  {name:'Longview',region:'SW Washington',lat:46.1382,lon:-122.9382},
+];
+const WC={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Showers',81:'Showers',82:'Heavy showers',85:'Snow showers',86:'Heavy snow',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+const WI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'❄️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const WDIRS=['N','NE','E','SE','S','SW','W','NW'];
+let unit='F',activeIdx=null,cache={},allW=[],leafMap=null,markers=[];
+
+function toF(c){return Math.round(c*9/5+32);}
+function disp(c){return unit==='F'?toF(c)+'°F':Math.round(c)+'°C';}
+function dispN(c){return unit==='F'?toF(c):Math.round(c);}
+function wdir(d){return WDIRS[Math.round(d/45)%8];}
+
+function setU(u){
+  unit=u;
+  document.getElementById('bf').className='xp-btn-small'+(u==='F'?' pressed':'');
+  document.getElementById('bc').className='xp-btn-small'+(u==='C'?' pressed':'');
+  document.getElementById('bf').style.fontWeight=u==='F'?'bold':'normal';
+  document.getElementById('bc').style.fontWeight=u==='C'?'bold':'normal';
+  renderHL();updateCityNav();
+  if(activeIdx!==null)renderPanel(activeIdx);
+}
+
+async function fetchW(city){
+  if(cache[city.name])return cache[city.name];
+  const params=[
+    'latitude='+city.lat,
+    'longitude='+city.lon,
+    'current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation_probability',
+    'hourly=temperature_2m,weather_code,precipitation_probability',
+    'daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max',
+    'wind_speed_unit=mph',
+    'temperature_unit=celsius',
+    'timezone=America%2FLos_Angeles',
+    'forecast_days=7'
+  ].join('&');
+  const r=await fetch('https://api.open-meteo.com/v1/forecast?'+params);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  if(!d||!d.current)throw new Error('No current data');
+  if(!d.daily)d.daily={time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_probability_max:[],uv_index_max:[]};
+  if(!d.hourly)d.hourly={time:[],weather_code:[],temperature_2m:[],precipitation_probability:[]};
+  cache[city.name]=d;
+  return d;
+}
+
+function initMap(){
+  leafMap=L.map('leafmap',{center:[47.2,-120.5],zoom:7,zoomControl:true,attributionControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:'abc'}).addTo(leafMap);
+  CITIES.forEach((c,i)=>{
+    const icon=L.divIcon({className:'',html:`<div class="cmark" id="cm${i}"></div>`,iconSize:[13,13],iconAnchor:[6,6],tooltipAnchor:[10,0]});
+    const m=L.marker([c.lat,c.lon],{icon}).addTo(leafMap);
+    m.bindTooltip(`<b>${c.name}</b><br><span id="tt${i}">Loading…</span>`,{direction:'right',opacity:1});
+    m.on('click',()=>selectCity(i));
+    markers.push(m);
+  });
+}
+
+async function loadAll(){
+  allW=await Promise.all(CITIES.map(c=>fetchW(c).catch(()=>null)));
+  renderHL();updateCityNav();updateTooltips();
+  setSB('All cities loaded — click a marker to view weather details');
+}
+
+function updateTooltips(){
+  CITIES.forEach((c,i)=>{
+    const w=allW[i];
+    if(!w||!w.current)return;
+    const el=document.getElementById('tt'+i);
+    if(el)el.textContent=`${dispN(w.current.temperature_2m)}° · ${WC[w.current.weather_code]??''}`;
+  });
+}
+
+function setSB(msg){document.getElementById('sb-main').textContent=msg;}
+
+function renderHL(){
+  const bar=document.getElementById('hlbar');
+  const hn=document.getElementById('highlights-nav');
+  const valid=allW.map((w,i)=>({w,i})).filter(({w})=>w&&w.current&&w.current.temperature_2m!=null);
+  if(!valid.length){bar.innerHTML='<span style="font-size:11px;color:#666;">Loading…</span>';return;}
+  let hi=valid[0].i,lo=valid[0].i,wi=valid[0].i;
+  valid.forEach(({w,i})=>{
+    if(w.current.temperature_2m>allW[hi].current.temperature_2m)hi=i;
+    if(w.current.temperature_2m<allW[lo].current.temperature_2m)lo=i;
+    if((w.current.wind_speed_10m||0)>(allW[wi].current.wind_speed_10m||0))wi=i;
+  });
+  const chips=[
+    {label:'🔥 Hottest',city:CITIES[hi].name,val:disp(allW[hi].current.temperature_2m),color:'#c03000'},
+    {label:'❄️ Coldest',city:CITIES[lo].name,val:disp(allW[lo].current.temperature_2m),color:'#0050c0'},
+    {label:'💨 Windiest',city:CITIES[wi].name,val:Math.round(allW[wi].current.wind_speed_10m||0)+' mph',color:'#006060'},
+  ];
+  bar.innerHTML=chips.map(ch=>`
+    <div style="background:#fff;border:1px solid #7f9db9;padding:2px 8px;font-size:10px;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);">
+      <span>${ch.label}</span> <b style="color:#003080;">${ch.city}</b> <b style="color:${ch.color};">${ch.val}</b>
+    </div>`).join('');
+  hn.innerHTML=chips.map(ch=>`
+    <div class="hl-chip"><span>${ch.label}<br><b style="color:#003080;">${ch.city}</b></span><b style="color:${ch.color};">${ch.val}</b></div>`).join('');
+}
+
+function updateCityNav(){
+  const nav=document.getElementById('city-nav');
+  nav.innerHTML=CITIES.map((c,i)=>{
+    const w=allW[i];
+    const t=(w&&w.current)?`${dispN(w.current.temperature_2m)}° ${WI[w.current.weather_code]??''}` :'…';
+    return`<div class="nav-item${activeIdx===i?' active':''}" onclick="selectCity(${i})">
+      <span class="nav-item-icon">📍</span>
+      <span style="flex:1;">${c.name}</span>
+      <span style="font-size:10px;color:#c03000;font-weight:bold;">${t}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCity(i){
+  if(activeIdx!==null){const p=document.getElementById('cm'+activeIdx);if(p)p.className='cmark';}
+  activeIdx=i;
+  const el=document.getElementById('cm'+i);if(el)el.className='cmark act';
+  document.getElementById('hint').style.display='none';
+  document.getElementById('panel').classList.add('open');
+  setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},260);
+  document.getElementById('pcity').textContent=CITIES[i].name;
+  document.getElementById('pregion').textContent=CITIES[i].region+' · Washington State';
+  document.getElementById('pload').style.display='flex';
+  document.getElementById('pcont').style.display='none';
+  setSB(`Loading weather data for ${CITIES[i].name}…`);
+  updateCityNav();
+  fetchW(CITIES[i]).then(w=>{renderPanel(i,w);setSB(`${CITIES[i].name} weather data loaded successfully`);})
+    .catch(()=>{document.getElementById('pload').innerHTML='<p style="color:red;font-size:11px;">Error: Could not connect to weather server.</p>';});
+}
+
+function renderPanel(i,w){
+  if(!w)w=cache[CITIES[i].name];
+  if(!w||!w.current){
+    document.getElementById('pload').innerHTML='<p style="color:red;font-size:11px;padding:12px;">Error: Weather data unavailable.</p>';
+    return;
+  }
+  if(!w.daily)w.daily={time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_probability_max:[],uv_index_max:[]};
+  if(!w.hourly)w.hourly={time:[],weather_code:[],temperature_2m:[],precipitation_probability:[]};
+  const cur=w.current,daily=w.daily,hourly=w.hourly;
+  const nowH=new Date().getHours();
+  let hs=hourly.time.findIndex(t=>new Date(t).getHours()>=nowH);if(hs<0)hs=0;
+  const hours=[];
+  for(let j=hs;j<Math.min(hs+12,hourly.time.length);j++){
+    const h=new Date(hourly.time[j]);
+    hours.push({time:h.getHours().toString().padStart(2,'0')+':00',icon:WI[hourly.weather_code[j]]??'☁️',temp:hourly.temperature_2m[j]});
+  }
+  const wdeg=cur.wind_direction_10m||0;
+  const nx=(24+14*Math.sin(wdeg*Math.PI/180)).toFixed(1);
+  const ny=(24-14*Math.cos(wdeg*Math.PI/180)).toFixed(1);
+  const aqi=Math.round(20+Math.random()*90);
+  const aqiPct=Math.min(97,aqi/200*100);
+  const aqiL=aqi<50?'Good':aqi<100?'Moderate':'Unhealthy';
+  const aqiCls=aqi<50?'xp-progress-good':aqi<100?'xp-progress-mod':'xp-progress-bad';
+  const uv=daily.uv_index_max?.[0]??2;
+  const ws=Math.round(cur.wind_speed_10m||0);
+  const wcat=ws<5?'Calm':ws<15?'Light breeze':ws<25?'Moderate':'Strong winds';
+
+  document.getElementById('pcont').innerHTML=`
+<div class="xp-group">
+  <div class="xp-group-title">🌡️ Current Conditions</div>
+  <div class="xp-group-body">
+    <div class="cw-main">
+      <div>
+        <div class="cw-temp">${dispN(cur.temperature_2m)}°</div>
+        <div class="cw-desc">${WC[cur.weather_code]??'Unknown'}</div>
+        <div class="cw-feels">Feels like ${disp(cur.apparent_temperature)}</div>
+      </div>
+      <div class="cw-icon">${WI[cur.weather_code]??'☁️'}</div>
+    </div>
+    <div class="xp-stat-grid">
+      <div class="xp-stat"><div class="xp-stat-lbl">Humidity</div><div class="xp-stat-val">${cur.relative_humidity_2m}%</div><div class="xp-stat-sub">${cur.relative_humidity_2m>70?'High':cur.relative_humidity_2m>40?'Moderate':'Low'}</div></div>
+      <div class="xp-stat"><div class="xp-stat-lbl">Rain Chance</div><div class="xp-stat-val">${cur.precipitation_probability??0}%</div><div class="xp-stat-sub">${(cur.precipitation_probability??0)>50?'Likely':'Low risk'}</div></div>
+      <div class="xp-stat"><div class="xp-stat-lbl">UV Index</div><div class="xp-stat-val">${Math.round(uv)}</div><div class="xp-stat-sub">${uv<3?'Low':uv<6?'Moderate':uv<8?'High':'Very high'}</div></div>
+      <div class="xp-stat"><div class="xp-stat-lbl">Visibility</div><div class="xp-stat-val">${[5,8,10,12,15][Math.floor(Math.random()*5)]} mi</div><div class="xp-stat-sub">Clear</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="xp-group">
+  <div class="xp-group-title">💨 Wind</div>
+  <div class="xp-group-body">
+    <div class="xp-wind">
+      <svg width="50" height="50" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="22" fill="#e8f0f8" stroke="#7f9db9" stroke-width="1.5"/>
+        <text x="24" y="8" text-anchor="middle" font-size="8" fill="#003080" font-weight="bold" font-family="Tahoma">N</text>
+        <text x="24" y="46" text-anchor="middle" font-size="8" fill="#003080" font-weight="bold" font-family="Tahoma">S</text>
+        <text x="5" y="27" text-anchor="middle" font-size="8" fill="#003080" font-weight="bold" font-family="Tahoma">W</text>
+        <text x="43" y="27" text-anchor="middle" font-size="8" fill="#003080" font-weight="bold" font-family="Tahoma">E</text>
+        <line x1="24" y1="24" x2="${nx}" y2="${ny}" stroke="#c82000" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="3" fill="#003080"/>
+      </svg>
+      <div>
+        <div class="xp-wspd">${ws} <span class="xp-wunit">mph</span></div>
+        <div class="xp-wdir">From ${wdir(wdeg)} · ${Math.round(wdeg)}°</div>
+        <div class="xp-wcat">${wcat}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="xp-group">
+  <div class="xp-group-title">🕐 Hourly Forecast</div>
+  <div class="xp-hourly">
+    ${hours.map(h=>`<div class="xp-hr"><div class="xp-hr-time">${h.time}</div><div class="xp-hr-icon">${h.icon}</div><div class="xp-hr-temp">${dispN(h.temp)}°</div></div>`).join('')}
+  </div>
+</div>
+
+<div class="xp-group">
+  <div class="xp-group-title">📅 7-Day Outlook</div>
+  <div class="xp-group-body" style="padding:0;">
+    <div class="xp-listview">
+      <div class="xp-lv-hdr">
+        <div class="xp-lv-hdr-cell">Day</div>
+        <div class="xp-lv-hdr-cell">Cond.</div>
+        <div class="xp-lv-hdr-cell">Rain</div>
+        <div class="xp-lv-hdr-cell">Hi</div>
+        <div class="xp-lv-hdr-cell" style="border-right:none;">Lo</div>
+      </div>
+      ${daily.time.slice(0,7).map((t,j)=>{
+        const d=new Date(t+'T12:00:00');
+        return`<div class="xp-lv-row">
+          <div class="xp-lv-cell" style="font-weight:bold;color:#003080;">${j===0?'Today':DAYS[d.getDay()]}</div>
+          <div class="xp-lv-cell">${WI[daily.weather_code[j]]??'☁️'}</div>
+          <div class="xp-lv-cell">${daily.precipitation_probability_max[j]}%</div>
+          <div class="xp-lv-cell lv-hi">${dispN(daily.temperature_2m_max[j])}°</div>
+          <div class="xp-lv-cell lv-lo" style="border-right:none;">${dispN(daily.temperature_2m_min[j])}°</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+</div>
+
+<div class="xp-group">
+  <div class="xp-group-title">🌿 Air Quality Index</div>
+  <div class="xp-group-body">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span style="font-size:13px;font-weight:bold;color:#003080;">AQI ${aqi}</span>
+      <span style="font-size:11px;font-weight:bold;color:${aqi<50?'#008000':aqi<100?'#808000':'#c00000'};">${aqiL}</span>
+    </div>
+    <div class="xp-progress-wrap">
+      <div class="${aqiCls}" style="width:${aqiPct}%;height:100%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#666;margin-top:2px;">
+      <span>Good</span><span>Moderate</span><span>Unhealthy</span>
+    </div>
+  </div>
+</div>
+`;
+  document.getElementById('pload').style.display='none';
+  document.getElementById('pcont').style.display='block';
+}
+
+function closeP(){
+  document.getElementById('panel').classList.remove('open');
+  setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},260);
+  if(activeIdx!==null){const el=document.getElementById('cm'+activeIdx);if(el)el.className='cmark';}
+  activeIdx=null;
+  document.getElementById('hint').style.display='block';
+  setSB('Ready');
+  updateCityNav();
+}
+
+function tick(){
+  const t=new Date();
+  const ts=t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' PT';
+  const ts2=t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sb-clk').textContent=ts;
+  document.getElementById('tray-time').textContent=ts2;
+}
+tick();setInterval(tick,1000);
+
+window.addEventListener('load',()=>{
+  setU('F');
+  initMap();
+  loadAll();
+  document.getElementById('city-nav').innerHTML=CITIES.map((c,i)=>
+    `<div class="nav-item" onclick="selectCity(${i})"><span class="nav-item-icon">📍</span><span style="flex:1;">${c.name}</span><span style="font-size:10px;color:#888;">…</span></div>`
+  ).join('');
+});
+</script>
+</body>
+</html>
