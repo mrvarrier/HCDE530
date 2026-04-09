@@ -45,6 +45,9 @@ env/
 # *.json
 # output/
 
+# Generated analysis results
+review_analysis_results.csv
+
 # Testing
 .pytest_cache/
 .coverage
