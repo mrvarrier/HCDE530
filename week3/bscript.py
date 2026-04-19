@@ -24,16 +24,21 @@ print("Responses by role:")
 for role, count in sorted(role_counts.items()):
     print(f"  {role}: {count}")
 
-# Calculate the average years of experience
-total_experience = 0
-valid_count = 0
-for row in rows:
-    # Fixed bug: handle non-numeric values like "fifteen"
-    if row["experience_years"].strip().isdigit():
-        total_experience += int(row["experience_years"])
-        valid_count += 1
+def calculate_average_experience(rows):
+    #Calculate the average years of experience, skipping non-numeric values.
+    total_experience = 0
+    valid_count = 0
 
-avg_experience = total_experience / valid_count if valid_count > 0 else 0
+    for row in rows:
+        if row["experience_years"].strip().isdigit():  # Skip non-numeric values like "fifteen"
+            total_experience += int(row["experience_years"])
+            valid_count += 1
+
+    return total_experience / valid_count if valid_count > 0 else 0
+
+
+# Calculate the average years of experience
+avg_experience = calculate_average_experience(rows)
 print(f"\nAverage years of experience: {avg_experience:.1f}")
 
 # Find the top 5 highest satisfaction scores
