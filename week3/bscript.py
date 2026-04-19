@@ -26,10 +26,15 @@ for role, count in sorted(role_counts.items()):
 
 # Calculate the average years of experience
 total_experience = 0
+valid_count = 0  # Track valid numeric entries
 for row in rows:
-    total_experience += int(row["experience_years"])
+    # fixing the bug to handle years written in words 
+    if row["experience_years"].strip().isdigit():
+        total_experience += int(row["experience_years"])
+        valid_count += 1
+    # else it will skip non-numeric values
 
-avg_experience = total_experience / len(rows)
+avg_experience = total_experience / valid_count if valid_count > 0 else 0
 print(f"\nAverage years of experience: {avg_experience:.1f}")
 
 # Find the top 5 highest satisfaction scores
@@ -38,7 +43,8 @@ for row in rows:
     if row["satisfaction_score"].strip():
         scored_rows.append((row["participant_name"], int(row["satisfaction_score"])))
 
-scored_rows.sort(key=lambda x: x[1])
+# Fixed the bug to sort in descending order to get highest scores first
+scored_rows.sort(key=lambda x: x[1], reverse=True)
 top5 = scored_rows[:5]
 
 print("\nTop 5 satisfaction scores:")
