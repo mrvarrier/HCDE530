@@ -53,3 +53,20 @@ top5 = scored_rows[:5]
 print("\nTop 5 satisfaction scores:")
 for name, score in top5:
     print(f"  {name}: {score}")
+
+# Write cleaned data to a new CSV file
+# Only include rows with valid numeric experience_years
+cleaned_rows = []
+for row in rows:
+    if row["experience_years"].strip().isdigit():  # Only keep rows with valid experience data
+        cleaned_rows.append(row)
+
+output_filename = "cleaned_data.csv"
+with open(output_filename, "w", newline="", encoding="utf-8") as f:
+    if cleaned_rows:
+        fieldnames = cleaned_rows[0].keys()  # Get column names from first row
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(cleaned_rows)
+
+print(f"\nCleaned data saved to {output_filename}")
