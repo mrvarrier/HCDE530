@@ -37,6 +37,25 @@ def calculate_average_experience(rows):
     return total_experience / valid_count if valid_count > 0 else 0
 
 
+def summarize_data(rows):
+    """Return a plain-language summary of the data."""
+    row_count = len(rows)
+
+    # Count unique roles
+    unique_roles = set()
+    for row in rows:
+        unique_roles.add(row["role"].strip().title())
+
+    # Count empty name fields
+    empty_names = 0
+    for row in rows:
+        if not row["participant_name"].strip():
+            empty_names += 1
+
+    summary = f"The dataset contains {row_count} rows with {len(unique_roles)} unique roles and {empty_names} empty name field(s)."
+    return summary
+
+
 # Calculate the average years of experience
 avg_experience = calculate_average_experience(rows)
 print(f"\nAverage years of experience: {avg_experience:.1f}")
@@ -70,3 +89,7 @@ with open(output_filename, "w", newline="", encoding="utf-8") as f:
         writer.writerows(cleaned_rows)
 
 print(f"\nCleaned data saved to {output_filename}")
+
+# Display summary of cleaned data
+summary = summarize_data(cleaned_rows)
+print(f"\n{summary}")
