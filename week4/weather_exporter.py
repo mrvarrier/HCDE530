@@ -1,15 +1,26 @@
-import requests
+import os
 import csv
+import requests
+from dotenv import load_dotenv
 
-# Open-Meteo Forecast API endpoint.
-# This endpoint returns weather forecast data in JSON format.
-API_URL = "https://api.open-meteo.com/v1/forecast"
+# Load environment variables from the .env file.
+# This keeps API-related configuration outside of the Python code.
+load_dotenv()
 
-# Parameters sent to the API.
-# latitude/longitude: Seattle, Washington
-# hourly: the weather variables we want returned for each hour
-# timezone: makes the timestamps match Seattle local time
-# forecast_days: asks for 7 days of hourly forecast data
+# API endpoint URL loaded from .env.
+# This endpoint returns weather forecast data from the Open-Meteo API in JSON format.
+API_URL = os.environ.get("OPEN_METEO_API_URL")
+
+# Check that the API URL exists before making the request.
+if not API_URL:
+    raise ValueError("OPEN_METEO_API_URL is missing from the .env file.")
+
+# Parameters used in the API request:
+# latitude: Seattle's latitude
+# longitude: Seattle's longitude
+# hourly: the specific hourly weather fields requested from the API
+# timezone: converts the forecast times to Seattle local time
+# forecast_days: requests 7 days of forecast data
 params = {
     "latitude": 47.6062,
     "longitude": -122.3321,
@@ -18,34 +29,37 @@ params = {
     "forecast_days": 7
 }
 
+# Send a GET request to the Open-Meteo API endpoint.
+# The API returns a JSON response containing weather forecast data.
 response = requests.get(API_URL, params=params)
 
-# Raise an error if the API request failed.
+# Stop the script if the request fails.
 response.raise_for_status()
 
 # Convert the JSON response into a Python dictionary.
 data = response.json()
 
-# The "hourly" key contains the hourly weather data.
+# The "hourly" key contains hourly forecast data.
+# Each value inside "hourly" is a list where each index represents one hour.
 hourly_data = data["hourly"]
 
-# Each key below is a list.
-# time: date and hour of the forecast
-# temperature_2m: temperature 2 meters above ground in Celsius
-# relative_humidity_2m: humidity percentage 2 meters above ground
-# precipitation: predicted precipitation amount in millimeters
-# wind_speed_10m: wind speed 10 meters above ground
+# Extract each field from the JSON response:
+# time: the date and hour of each forecast record
+# temperature_2m: air temperature 2 meters above ground, measured in Celsius
+# relative_humidity_2m: humidity 2 meters above ground, measured as a percentage
+# precipitation: expected precipitation amount, measured in millimeters
+# wind_speed_10m: wind speed 10 meters above ground, measured in km/h
 times = hourly_data["time"]
 temperatures = hourly_data["temperature_2m"]
 humidities = hourly_data["relative_humidity_2m"]
 precipitations = hourly_data["precipitation"]
 wind_speeds = hourly_data["wind_speed_10m"]
 
-# Save the parsed data into a CSV file.
+# Save the extracted data into a readable CSV file.
 with open("seattle_weather.csv", mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
 
-    # CSV header row
+    # Write the CSV header row.
     writer.writerow([
         "time",
         "temperature_2m_celsius",
@@ -54,7 +68,7 @@ with open("seattle_weather.csv", mode="w", newline="", encoding="utf-8") as file
         "wind_speed_10m_kmh"
     ])
 
-    # Write each hourly record as one row in the CSV.
+    # Write one row for each hourly weather record.
     # 7 days of hourly data gives 168 records, which is more than the required 50.
     for i in range(len(times)):
         writer.writerow([
