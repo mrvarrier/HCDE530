@@ -102,5 +102,3 @@ This analysis gave me a foundation for MP1. The patterns I found will directly i
 | **C5 - Pandas Analysis** | `pandaanalysis.ipynb` cells 3-14 | 8 pandas operations, 3 analytical questions answered with interpretation |
 | **C3 - Data Cleaning** | `pandaanalysis.ipynb` cell 5 | `extract_number()` function handles text-to-numeric conversion |
 | **C2 - Documentation** | Throughout notebook | Every operation has Question/Why/Interpretation structure |
-
-**GitHub Repository**: [Add your repo URL here]
