@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audit Engine</title>
+</head>
+<body>
+    <h1>Test Audit Data Generation</h1>
+    <div id="output"></div>
+
+    <script type="module">
+        import { generateAudit } from './src/utils/auditEngine.js';
+
+        const output = document.getElementById('output');
+
+        try {
+            const audit = generateAudit('amazon.com');
+
+            output.innerHTML = `
+                <h2>Audit Results for: ${audit.url}</h2>
+                <p><strong>Site Type:</strong> ${audit.siteTypeLabel}</p>
+                <p><strong>Overall Score:</strong> ${audit.scores.overall}/100</p>
+                <h3>All Scores:</h3>
+                <ul>
+                    <li>Accessibility: ${audit.scores.accessibility}</li>
+                    <li>Design: ${audit.scores.design}</li>
+                    <li>Information Architecture: ${audit.scores.ia}</li>
+                    <li>Performance: ${audit.scores.performance}</li>
+                    <li>Usability: ${audit.scores.usability}</li>
+                </ul>
+                <h3>Findings (${audit.findings.length} total):</h3>
+                <ul>
+                    ${audit.findings.slice(0, 5).map(f => `
+                        <li><strong>${f.title}</strong> (${f.severity}, ${f.category})<br>
+                        ${f.impact}<br>
+                        <em>Recommendation: ${f.recommendation}</em></li>
+                    `).join('')}
+                </ul>
+                <h3>Typography:</h3>
+                <p>Fonts: ${audit.typography.fonts.join(', ')}</p>
+                <h3>Colors:</h3>
+                <div style="display: flex; gap: 10px;">
+                    ${audit.colors.colors.map(c => `
+                        <div style="width: 50px; height: 50px; background: ${c}; border: 1px solid #ccc;" title="${c}"></div>
+                    `).join('')}
+                </div>
+                <h3>Metadata:</h3>
+                <p>Page Size: ${audit.metadata.pageSize}</p>
+                <p>Load Time: ${audit.metadata.loadTime}</p>
+                <p>Requests: ${audit.metadata.requestCount}</p>
+            `;
+        } catch (error) {
+            output.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            console.error(error);
+        }
+    </script>
+</body>
+</html>
