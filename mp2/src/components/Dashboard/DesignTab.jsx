@@ -3,7 +3,8 @@ import { Palette, Type, Layout, Map } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../UI';
 
 export const DesignTab = ({ audit }) => {
-  const { typography, colors, ia } = audit || {};
+  const { typography, colors, ia, metadata } = audit || {};
+  const viewportData = metadata?.viewportData;
 
   return (
     <div className="space-y-8">
@@ -280,7 +281,13 @@ export const DesignTab = ({ audit }) => {
                 <CardTitle>Site Structure</CardTitle>
               </CardHeader>
               <CardContent>
-                {ia.home ? (
+                {ia.structure && ia.structure.length > 0 ? (
+                  <div className="space-y-2">
+                    {ia.structure.map((node, idx) => (
+                      <SiteMapNode key={idx} node={node} level={0} />
+                    ))}
+                  </div>
+                ) : ia.home ? (
                   <div className="space-y-2">
                     <SiteMapNode node={ia.home} level={0} />
                   </div>
@@ -370,6 +377,155 @@ export const DesignTab = ({ audit }) => {
               </div>
             </CardContent>
           </Card>
+        </section>
+      )}
+
+      {/* Viewport Testing Section (NEW - Phase 2) */}
+      {viewportData && (
+        <section>
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="bg-purple-100 p-2 rounded-lg">
+              <Layout className="w-6 h-6 text-purple-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Responsive Design Testing</h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Tested across mobile, tablet, and desktop viewports to assess responsive design implementation
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Mobile Viewport */}
+            {viewportData.mobile && (
+              <Card hover={false}>
+                <CardHeader>
+                  <CardTitle className="text-center">
+                    📱 Mobile
+                    <div className="text-sm font-normal text-gray-500 mt-1">
+                      {viewportData.mobile.dimensions.width}x{viewportData.mobile.dimensions.height}px
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {viewportData.mobile.screenshot && (
+                    <div className="mb-4 border border-gray-200 rounded overflow-hidden">
+                      <img
+                        src={`data:image/png;base64,${viewportData.mobile.screenshot}`}
+                        alt="Mobile viewport"
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                  {!viewportData.mobile.error && (
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Visible Elements:</span>
+                        <span className="font-semibold">{viewportData.mobile.visibleElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Hidden Elements:</span>
+                        <span className="font-semibold">{viewportData.mobile.hiddenElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Page Height:</span>
+                        <span className="font-semibold">{viewportData.mobile.scrollHeight}px</span>
+                      </div>
+                    </div>
+                  )}
+                  {viewportData.mobile.error && (
+                    <p className="text-sm text-red-600">{viewportData.mobile.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Tablet Viewport */}
+            {viewportData.tablet && (
+              <Card hover={false}>
+                <CardHeader>
+                  <CardTitle className="text-center">
+                    📲 Tablet
+                    <div className="text-sm font-normal text-gray-500 mt-1">
+                      {viewportData.tablet.dimensions.width}x{viewportData.tablet.dimensions.height}px
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {viewportData.tablet.screenshot && (
+                    <div className="mb-4 border border-gray-200 rounded overflow-hidden">
+                      <img
+                        src={`data:image/png;base64,${viewportData.tablet.screenshot}`}
+                        alt="Tablet viewport"
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                  {!viewportData.tablet.error && (
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Visible Elements:</span>
+                        <span className="font-semibold">{viewportData.tablet.visibleElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Hidden Elements:</span>
+                        <span className="font-semibold">{viewportData.tablet.hiddenElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Page Height:</span>
+                        <span className="font-semibold">{viewportData.tablet.scrollHeight}px</span>
+                      </div>
+                    </div>
+                  )}
+                  {viewportData.tablet.error && (
+                    <p className="text-sm text-red-600">{viewportData.tablet.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Desktop Viewport */}
+            {viewportData.desktop && (
+              <Card hover={false}>
+                <CardHeader>
+                  <CardTitle className="text-center">
+                    🖥️ Desktop
+                    <div className="text-sm font-normal text-gray-500 mt-1">
+                      {viewportData.desktop.dimensions.width}x{viewportData.desktop.dimensions.height}px
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {viewportData.desktop.screenshot && (
+                    <div className="mb-4 border border-gray-200 rounded overflow-hidden">
+                      <img
+                        src={`data:image/png;base64,${viewportData.desktop.screenshot}`}
+                        alt="Desktop viewport"
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                  {!viewportData.desktop.error && (
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Visible Elements:</span>
+                        <span className="font-semibold">{viewportData.desktop.visibleElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Hidden Elements:</span>
+                        <span className="font-semibold">{viewportData.desktop.hiddenElements}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Page Height:</span>
+                        <span className="font-semibold">{viewportData.desktop.scrollHeight}px</span>
+                      </div>
+                    </div>
+                  )}
+                  {viewportData.desktop.error && (
+                    <p className="text-sm text-red-600">{viewportData.desktop.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </section>
       )}
     </div>

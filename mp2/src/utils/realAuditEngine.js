@@ -67,7 +67,7 @@ export async function runRealAudit(url, setProgress = null) {
     updateProgress(currentStep++, steps[2]);
 
     const [a11yData, designData, iaData, perfData] = await Promise.all([
-      analyzeAccessibility(scrapeData.html, url),
+      analyzeAccessibility(scrapeData.html, url, scrapeData.computedStyles, scrapeData.accessibilityChecks), // Pass computed styles and a11y checks
       analyzeDesign(scrapeData.html, url, scrapeData.computedStyles), // Pass computed styles
       analyzeIA(scrapeData.html, url),
       FEATURES.pageSpeedAPI ? fetchPageSpeedData(url) : Promise.resolve(null)
@@ -107,9 +107,15 @@ export async function runRealAudit(url, setProgress = null) {
       spacing: designData?.spacing || null,
       ia: iaData || null,
 
-      // PageSpeed data if available
-      pageSpeedData: perfData || null,
+      // PageSpeed data if available (combine with browser metrics)
+      pageSpeedData: perfData ? {
+        ...perfData,
+        browserMetrics: scrapeData.performanceMetrics // Add browser metrics
+      } : {
+        browserMetrics: scrapeData.performanceMetrics // Only browser metrics if PageSpeed unavailable
+      },
       pageSpeedAvailable: !!perfData,
+      browserMetricsAvailable: !!scrapeData.performanceMetrics,
 
       // Scrape warnings (blocking, timeouts, etc.)
       scrapeWarnings: scrapeWarnings.length > 0 ? scrapeWarnings : null,
@@ -123,7 +129,8 @@ export async function runRealAudit(url, setProgress = null) {
         totalImages: scrapeData.metadata?.images,
         totalLinks: scrapeData.metadata?.links,
         coreWebVitals: perfData?.coreWebVitals || null,
-        coreWebVitalsSeverity: perfData?.metrics ? getCoreWebVitalsSeverity(perfData.metrics) : null
+        coreWebVitalsSeverity: perfData?.metrics ? getCoreWebVitalsSeverity(perfData.metrics) : null,
+        viewportData: scrapeData.viewportData || null // NEW: Multi-viewport testing results
       }
     };
 
@@ -161,7 +168,7 @@ async function scrapeWebsite(url) {
 /**
  * Analyze accessibility using backend API
  */
-async function analyzeAccessibility(html, url) {
+async function analyzeAccessibility(html, url, computedStyles = null, accessibilityChecks = null) {
   const endpoint = `${BACKEND_CONFIG.baseUrl}/analyze-accessibility`;
 
   const response = await fetch(endpoint, {
@@ -169,7 +176,12 @@ async function analyzeAccessibility(html, url) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ html, url }),
+    body: JSON.stringify({
+      html,
+      url,
+      computedStyles, // Pass computed styles for contrast checking
+      accessibilityChecks // Pass focus and touch target data
+    }),
     signal: AbortSignal.timeout(BACKEND_CONFIG.timeout)
   });
 

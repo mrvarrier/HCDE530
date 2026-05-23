@@ -156,10 +156,94 @@ const IssueItem = ({ finding }) => {
             <span className="font-medium">Impact: </span>
             {finding.impact}
           </div>
-          {finding.elements && (
-            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+
+          {/* Show affected elements count */}
+          {finding.affectedElements && (
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mb-2">
               <span className="font-medium">Affected Elements: </span>
-              {finding.elements}
+              {finding.affectedElements}
+            </div>
+          )}
+
+          {/* Color contrast violations details */}
+          {finding.id === 'color-contrast' && finding.violations && finding.violations.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-xs font-semibold text-gray-700">Contrast Violations (showing first 10):</div>
+              {finding.violations.map((violation, idx) => (
+                <div key={idx} className="text-xs bg-red-50 border border-red-200 p-3 rounded">
+                  <div className="font-mono text-gray-900 mb-1">{violation.element}</div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <span className="font-medium">Text: </span>
+                      <span style={{ color: violation.color }}>{violation.text}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Font Size: </span>
+                      {violation.fontSize}px {violation.isLargeText && '(Large text)'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">Colors:</span>
+                      <div className="flex items-center space-x-1">
+                        <div
+                          className="w-4 h-4 border border-gray-300 rounded"
+                          style={{ backgroundColor: violation.color }}
+                          title={`Text: ${violation.color}`}
+                        />
+                        <span>on</span>
+                        <div
+                          className="w-4 h-4 border border-gray-300 rounded"
+                          style={{ backgroundColor: violation.backgroundColor }}
+                          title={`Background: ${violation.backgroundColor}`}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-red-700">Ratio: {violation.ratio}:1</span>
+                      <span className="text-gray-600"> (needs {violation.required}:1)</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Touch target violations details */}
+          {finding.id === 'small-touch-targets' && finding.violations && finding.violations.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-xs font-semibold text-gray-700">Touch Target Issues (showing first 5):</div>
+              {finding.violations.map((violation, idx) => (
+                <div key={idx} className="text-xs bg-yellow-50 border border-yellow-200 p-3 rounded">
+                  <div className="font-mono text-gray-900 mb-1">{violation.element}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="font-medium">Text: </span>
+                      {violation.text}
+                    </div>
+                    <div>
+                      <span className="font-medium text-yellow-700">
+                        Size: {violation.width}x{violation.height}px
+                      </span>
+                      <span className="text-gray-600"> (needs 44x44px)</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* WCAG criteria and recommendation */}
+          {finding.wcagCriteria && (
+            <div className="text-xs text-gray-500 mt-2">
+              <span className="font-medium">WCAG: </span>
+              {finding.wcagCriteria}
+            </div>
+          )}
+          {finding.recommendation && (
+            <div className="text-xs text-blue-600 mt-2 bg-blue-50 p-2 rounded">
+              <span className="font-medium">Recommendation: </span>
+              {finding.recommendation}
             </div>
           )}
         </div>
