@@ -1,11 +1,24 @@
 import { generateAudit, runAudit as runSimulatedAudit } from './auditEngine';
 import { fetchPageSpeedData, getCoreWebVitalsSeverity } from './pageSpeedAPI';
+import { runRealAudit } from './realAuditEngine';
+import { FEATURES } from '../config';
 
 /**
- * Enhanced audit that integrates real PageSpeed Insights data
- * Falls back to simulated data if API fails
+ * Enhanced audit that integrates real web scraping or PageSpeed data
+ * Falls back to simulated data if real scraping unavailable or fails
  */
 export const runEnhancedAudit = async (url, onProgress, usePageSpeed = true) => {
+  // If real scraping is enabled, use it
+  if (FEATURES.realScraping) {
+    try {
+      console.log('[Enhanced Audit] Using real web scraping');
+      const realAudit = await runRealAudit(url, onProgress);
+      return realAudit;
+    } catch (error) {
+      console.error('[Enhanced Audit] Real scraping failed, falling back to simulation:', error);
+      // Fall through to simulated audit
+    }
+  }
   let pageSpeedData = null;
 
   // Try to fetch PageSpeed data if enabled
