@@ -15,6 +15,12 @@ export const PerformanceSection = ({ audit }) => {
 };
 
 const RealPerformanceSection = ({ pageSpeedData, metadata }) => {
+  // Add null checks for metadata and its properties
+  if (!metadata || !metadata.coreWebVitals) {
+    console.warn('Performance metadata is missing or incomplete');
+    return <SimulatedPerformanceMessage />;
+  }
+
   const { coreWebVitals, coreWebVitalsSeverity } = metadata;
 
   return (
@@ -93,7 +99,7 @@ const RealPerformanceSection = ({ pageSpeedData, metadata }) => {
       </Card>
 
       {/* Performance Opportunities */}
-      {pageSpeedData.opportunities.length > 0 && (
+      {pageSpeedData.opportunities && pageSpeedData.opportunities.length > 0 && (
         <Card hover={false}>
           <CardHeader>
             <CardTitle>Performance Opportunities</CardTitle>
@@ -112,35 +118,37 @@ const RealPerformanceSection = ({ pageSpeedData, metadata }) => {
       )}
 
       {/* Resource Summary */}
-      <Card hover={false}>
-        <CardHeader>
-          <CardTitle>Resource Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <ResourceStat
-              label="Total Size"
-              value={pageSpeedData.resources.totalSize}
-              icon={<Zap className="w-5 h-5" />}
-            />
-            <ResourceStat
-              label="Requests"
-              value={pageSpeedData.resources.requests}
-              icon={<Activity className="w-5 h-5" />}
-            />
-            <ResourceStat
-              label="Scripts"
-              value={pageSpeedData.resources.scripts}
-              icon={<AlertCircle className="w-5 h-5" />}
-            />
-            <ResourceStat
-              label="Images"
-              value={pageSpeedData.resources.images}
-              icon={<Info className="w-5 h-5" />}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {pageSpeedData.resources && (
+        <Card hover={false}>
+          <CardHeader>
+            <CardTitle>Resource Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <ResourceStat
+                label="Total Size"
+                value={pageSpeedData.resources.totalSize || 'N/A'}
+                icon={<Zap className="w-5 h-5" />}
+              />
+              <ResourceStat
+                label="Requests"
+                value={pageSpeedData.resources.requests || 0}
+                icon={<Activity className="w-5 h-5" />}
+              />
+              <ResourceStat
+                label="Scripts"
+                value={pageSpeedData.resources.scripts || 0}
+                icon={<AlertCircle className="w-5 h-5" />}
+              />
+              <ResourceStat
+                label="Images"
+                value={pageSpeedData.resources.images || 0}
+                icon={<Info className="w-5 h-5" />}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

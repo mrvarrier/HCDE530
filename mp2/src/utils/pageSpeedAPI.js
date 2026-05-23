@@ -1,7 +1,9 @@
 // Google PageSpeed Insights API Integration
 // Provides real performance data to enhance the simulated audit
 
-const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+import { PAGESPEED_CONFIG } from '../config';
+
+const PAGESPEED_API_URL = PAGESPEED_CONFIG.baseUrl;
 
 /**
  * Fetch PageSpeed Insights data for a URL
@@ -15,6 +17,9 @@ export const fetchPageSpeedData = async (url, strategy = 'mobile', apiKey = null
     // Ensure URL has protocol
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
+    // Use provided API key or fall back to config
+    const keyToUse = apiKey || PAGESPEED_CONFIG.apiKey;
+
     // Build API URL - note: multiple categories need to be added separately
     const params = new URLSearchParams({
       url: fullURL,
@@ -27,8 +32,11 @@ export const fetchPageSpeedData = async (url, strategy = 'mobile', apiKey = null
     params.append('category', 'best-practices');
     params.append('category', 'seo');
 
-    if (apiKey) {
-      params.append('key', apiKey);
+    if (keyToUse) {
+      params.append('key', keyToUse);
+      console.log('Using PageSpeed API with authentication');
+    } else {
+      console.warn('No API key provided - using free tier (limited to 50 requests/day)');
     }
 
     const response = await fetch(`${PAGESPEED_API_URL}?${params}`, {
@@ -45,7 +53,15 @@ export const fetchPageSpeedData = async (url, strategy = 'mobile', apiKey = null
     }
 
     const data = await response.json();
-    return parsePageSpeedData(data);
+    const parsed = parsePageSpeedData(data);
+
+    // Return null if parsing failed
+    if (!parsed) {
+      console.warn('Failed to parse PageSpeed data');
+      return null;
+    }
+
+    return parsed;
   } catch (error) {
     console.warn('PageSpeed API call failed:', error.message);
     return null;
@@ -56,9 +72,22 @@ export const fetchPageSpeedData = async (url, strategy = 'mobile', apiKey = null
  * Parse PageSpeed Insights response into usable format
  */
 const parsePageSpeedData = (data) => {
+  // Add comprehensive null checks to prevent crashes
+  if (!data || !data.lighthouseResult) {
+    console.warn('Invalid PageSpeed data structure');
+    return null;
+  }
+
   const lighthouse = data.lighthouseResult;
-  const categories = lighthouse.categories;
-  const audits = lighthouse.audits;
+  const categories = lighthouse.categories || {};
+  const audits = lighthouse.audits || {};
+
+  // Helper to safely get score
+  const getScore = (category) => {
+    return category && typeof category.score === 'number'
+      ? Math.round(category.score * 100)
+      : 0;
+  };
 
   return {
     // Core Web Vitals
@@ -72,12 +101,12 @@ const parsePageSpeedData = (data) => {
       si: audits['speed-index']?.displayValue || 'N/A'
     },
 
-    // Category Scores (0-100)
+    // Category Scores (0-100) with safe access
     scores: {
-      performance: Math.round(categories.performance.score * 100),
-      accessibility: Math.round(categories.accessibility.score * 100),
-      bestPractices: Math.round(categories['best-practices'].score * 100),
-      seo: Math.round(categories.seo.score * 100)
+      performance: getScore(categories.performance),
+      accessibility: getScore(categories.accessibility),
+      bestPractices: getScore(categories['best-practices']),
+      seo: getScore(categories.seo)
     },
 
     // Performance Metrics
@@ -243,7 +272,8 @@ export const getCoreWebVitalsSeverity = (metrics) => {
     const value = metrics[metric];
     const threshold = thresholds[metric];
 
-    if (!threshold || !value) {
+    // Fix: Handle 0 as a valid value, only reject null/undefined
+    if (!threshold || value === null || value === undefined) {
       results[metric] = 'unknown';
       return;
     }

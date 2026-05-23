@@ -1,0 +1,22 @@
+{
+  "name": "ux-auditor-api",
+  "version": "2.0.0",
+  "description": "Backend API for UX Website Auditor - Real web scraping and analysis",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "axe-core": "^4.8.3",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

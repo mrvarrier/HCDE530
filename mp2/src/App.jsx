@@ -4,6 +4,7 @@ import { Landing } from './pages/Landing';
 import { AuditProgress } from './components/Audit/AuditProgress';
 import { AuditResults } from './pages/AuditResults';
 import { runEnhancedAudit } from './utils/enhancedAuditEngine';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [currentAudit, setCurrentAudit] = useState(null);
@@ -17,9 +18,19 @@ function App() {
     const savedHistory = localStorage.getItem('auditHistory');
     if (savedHistory) {
       try {
-        setAuditHistory(JSON.parse(savedHistory));
+        const parsed = JSON.parse(savedHistory);
+
+        // Validate that parsed data is an array
+        if (Array.isArray(parsed)) {
+          setAuditHistory(parsed);
+        } else {
+          console.warn('Invalid audit history format, clearing storage');
+          localStorage.removeItem('auditHistory');
+        }
       } catch (err) {
         console.error('Failed to load audit history:', err);
+        // Clear corrupted data
+        localStorage.removeItem('auditHistory');
       }
     }
 
@@ -72,27 +83,35 @@ function App() {
   };
 
   return (
-    <MainLayout
-      onNewAudit={handleNewAudit}
-      showNewAuditButton={!!currentAudit}
-      usePageSpeed={usePageSpeed}
-      onTogglePageSpeed={() => setUsePageSpeed(!usePageSpeed)}
-    >
-      {loading && <AuditProgress progress={progress} />}
+    <ErrorBoundary onReset={handleNewAudit}>
+      <MainLayout
+        onNewAudit={handleNewAudit}
+        showNewAuditButton={!!currentAudit}
+        usePageSpeed={usePageSpeed}
+        onTogglePageSpeed={() => setUsePageSpeed(!usePageSpeed)}
+      >
+        <ErrorBoundary>
+          {loading && <AuditProgress progress={progress} />}
+        </ErrorBoundary>
 
-      {!loading && !currentAudit && (
-        <Landing
-          onRunAudit={handleRunAudit}
-          loading={loading}
-          usePageSpeed={usePageSpeed}
-          onTogglePageSpeed={() => setUsePageSpeed(!usePageSpeed)}
-        />
-      )}
+        <ErrorBoundary>
+          {!loading && !currentAudit && (
+            <Landing
+              onRunAudit={handleRunAudit}
+              loading={loading}
+              usePageSpeed={usePageSpeed}
+              onTogglePageSpeed={() => setUsePageSpeed(!usePageSpeed)}
+            />
+          )}
+        </ErrorBoundary>
 
-      {!loading && currentAudit && (
-        <AuditResults audit={currentAudit} />
-      )}
-    </MainLayout>
+        <ErrorBoundary>
+          {!loading && currentAudit && (
+            <AuditResults audit={currentAudit} />
+          )}
+        </ErrorBoundary>
+      </MainLayout>
+    </ErrorBoundary>
   );
 }
 
