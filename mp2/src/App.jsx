@@ -41,10 +41,17 @@ function App() {
     }
   }, []);
 
-  // Save audit history to localStorage whenever it changes
+  // Save audit history to localStorage whenever it changes (with error handling)
   useEffect(() => {
     if (auditHistory.length > 0) {
-      localStorage.setItem('auditHistory', JSON.stringify(auditHistory));
+      try {
+        localStorage.setItem('auditHistory', JSON.stringify(auditHistory));
+      } catch (error) {
+        console.warn('Failed to save audit history to localStorage:', error);
+        // Clear corrupted data
+        localStorage.removeItem('auditHistory');
+        setAuditHistory([]);
+      }
     }
   }, [auditHistory]);
 
@@ -62,10 +69,29 @@ function App() {
       const result = await runEnhancedAudit(url, setProgress, usePageSpeed);
       setCurrentAudit(result);
 
-      // Add to history (keep last 10)
+      // Create lightweight version for storage (remove large data)
+      const lightweightResult = {
+        url: result.url,
+        timestamp: result.timestamp,
+        dataSource: result.dataSource,
+        scrapeStatus: result.scrapeStatus,
+        // Don't store: screenshot, HTML, pageSpeedData, full findings
+      };
+
+      // Add to history (keep last 5 lightweight items)
       setAuditHistory(prev => {
-        const newHistory = [result, ...prev].slice(0, 10);
-        return newHistory;
+        const newHistory = [lightweightResult, ...prev].slice(0, 5);
+
+        // Try to save, catch quota errors
+        try {
+          localStorage.setItem('auditHistory', JSON.stringify(newHistory));
+          return newHistory;
+        } catch (storageError) {
+          console.warn('Failed to save audit history:', storageError);
+          // Clear history and save just this one
+          localStorage.setItem('auditHistory', JSON.stringify([lightweightResult]));
+          return [lightweightResult];
+        }
       });
     } catch (error) {
       console.error('Audit failed:', error);

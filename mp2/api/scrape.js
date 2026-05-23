@@ -98,7 +98,23 @@ export default async function handler(req, res) {
     await page.waitForTimeout(2000);
 
     // Extract HTML content
-    const html = await page.content();
+    let html = await page.content();
+
+    // For very large pages, clean up the HTML to reduce size
+    if (html.length > 1000000) { // > 1MB
+      console.log(`[Scrape] Large HTML detected (${(html.length / 1024 / 1024).toFixed(2)}MB), cleaning...`);
+
+      // Remove inline base64 images (huge space waste)
+      html = html.replace(/src="data:image\/[^"]+"/g, 'src="data:image/removed"');
+
+      // Remove comments
+      html = html.replace(/<!--[\s\S]*?-->/g, '');
+
+      // Remove excessive whitespace
+      html = html.replace(/\s+/g, ' ');
+
+      console.log(`[Scrape] Cleaned HTML size: ${(html.length / 1024 / 1024).toFixed(2)}MB`);
+    }
 
     // Extract page title
     const title = await page.title();
@@ -170,12 +186,17 @@ export default async function handler(req, res) {
       };
     });
 
-    // Take screenshot
-    const screenshot = await page.screenshot({
-      fullPage: false,
-      type: 'png',
-      encoding: 'base64'
-    });
+    // Take screenshot (only for smaller sites to save bandwidth)
+    let screenshot = null;
+    if (html.length < 500000) { // Only screenshot if HTML < 500KB
+      screenshot = await page.screenshot({
+        fullPage: false,
+        type: 'png',
+        encoding: 'base64'
+      });
+    } else {
+      console.log('[Scrape] Skipping screenshot for large site to reduce payload size');
+    }
 
     await browser.close();
 
@@ -195,7 +216,7 @@ export default async function handler(req, res) {
         metaTags
       },
       computedStyles, // NEW: Actual rendered styles
-      screenshot,
+      screenshot, // May be null for large sites
       scrapeStatus, // NEW: success, partial, or blocked
       scrapeWarning: scrapeStatus !== 'success' ? 'Website loaded with issues - some data may be incomplete' : null,
       timestamp: new Date().toISOString()
