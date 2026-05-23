@@ -1,7 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd api && npm install && npx playwright install chromium --with-deps && cd .. && npm install && npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
+  "installCommand": "npm install && cd api && npm install && npx playwright install chromium",
   "functions": {
     "api/**/*.js": {
       "memory": 1024,
