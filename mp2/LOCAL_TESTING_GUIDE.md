@@ -18,35 +18,50 @@ This guide will help you test the real web scraping functionality on your local 
 
 The backend needs to run on `localhost:3000` for the frontend to connect.
 
-### Option A: Using Vercel Dev (Recommended)
+### Option A: Using Express Server (Recommended)
 
 ```bash
 # Make sure you're in the project root
 cd /Users/manishvarrier/Documents/HCDE530/mp2
 
-# Install Vercel CLI if not already installed
-npm install -g vercel
+# Navigate to api directory
+cd api
 
-# Start Vercel dev server (this runs the serverless functions locally)
-vercel dev --listen 3000
+# Start the Express server
+node server.js
 ```
 
 **Expected Output:**
 ```
-Vercel CLI 28.x.x
-> Ready! Available at http://localhost:3000
+🚀 Backend API server running at http://localhost:3000
+📡 Available endpoints:
+   POST http://localhost:3000/api/scrape
+   POST http://localhost:3000/api/analyze-accessibility
+   POST http://localhost:3000/api/analyze-design
+   POST http://localhost:3000/api/analyze-ia
+   GET  http://localhost:3000/api/health
 ```
 
-**Note**: First time running `vercel dev` will ask some questions:
-- "Set up and develop...?" → **Yes**
-- "Which scope...?" → Choose your account
-- "Link to existing project?" → **No**
-- "What's your project's name?" → **mp2** (or whatever you prefer)
-- "In which directory...?" → **.** (current directory)
+**Note**: First time running, you may need to install Playwright browsers:
+```bash
+npx playwright install chromium
+```
 
-### Option B: Direct Node Execution (Alternative)
+### Option B: Using Quick Start Script
 
-If Vercel dev doesn't work, you can test endpoints directly:
+```bash
+# Make sure you're in the project root
+cd /Users/manishvarrier/Documents/HCDE530/mp2
+
+# Run the startup script (starts both frontend and backend)
+./start-local.sh
+```
+
+This will start both servers automatically.
+
+### Option C: Direct Node Execution (Testing Only)
+
+If you just want to test the endpoints without a server:
 
 ```bash
 # Navigate to api directory

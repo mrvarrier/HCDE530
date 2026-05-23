@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import Button from './UI/Button';
+import { Button } from './UI/Button';
 
 /**
  * Error Boundary Component

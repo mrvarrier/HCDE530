@@ -8,16 +8,25 @@ import { FEATURES } from '../config';
  * Falls back to simulated data if real scraping unavailable or fails
  */
 export const runEnhancedAudit = async (url, onProgress, usePageSpeed = true) => {
+  // Debug logging
+  console.log('🚀 [Enhanced Audit] Starting audit for:', url);
+  console.log('🚀 [Enhanced Audit] FEATURES.realScraping:', FEATURES.realScraping);
+  console.log('🚀 [Enhanced Audit] usePageSpeed:', usePageSpeed);
+
   // If real scraping is enabled, use it
   if (FEATURES.realScraping) {
     try {
-      console.log('[Enhanced Audit] Using real web scraping');
+      console.log('✅ [Enhanced Audit] Using real web scraping');
       const realAudit = await runRealAudit(url, onProgress);
+      console.log('✅ [Enhanced Audit] Real audit completed successfully');
       return realAudit;
     } catch (error) {
-      console.error('[Enhanced Audit] Real scraping failed, falling back to simulation:', error);
+      console.error('❌ [Enhanced Audit] Real scraping failed, falling back to simulation:', error);
+      console.error('❌ [Enhanced Audit] Error details:', error.message, error.stack);
       // Fall through to simulated audit
     }
+  } else {
+    console.log('⚠️ [Enhanced Audit] Real scraping is DISABLED, using simulation');
   }
   let pageSpeedData = null;
 

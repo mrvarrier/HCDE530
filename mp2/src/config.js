@@ -51,6 +51,9 @@ export const FEATURES = {
   maxHistoryItems: 10
 };
 
+// Debug logging for environment variables (helpful for troubleshooting)
+console.log('🔧 Feature Flags:', FEATURES);
+
 // App Metadata
 export const APP_INFO = {
   name: 'UX Website Auditor',
