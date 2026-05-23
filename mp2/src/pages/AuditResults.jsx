@@ -5,12 +5,12 @@ import { WCAGTab } from '../components/Dashboard/WCAGTab';
 import { DesignTab } from '../components/Dashboard/DesignTab';
 
 export const AuditResults = ({ audit }) => {
-  const [activeTab, setActiveTab] = useState('pagespeed');
+  const [activeTab, setActiveTab] = useState('design');
 
   const tabs = [
+    { id: 'design', label: 'Design System' },
     { id: 'pagespeed', label: 'PageSpeed Insights' },
-    { id: 'wcag', label: 'WCAG Accessibility' },
-    { id: 'design', label: 'Design System' }
+    { id: 'wcag', label: 'WCAG Accessibility' }
   ];
 
   return (
@@ -41,9 +41,9 @@ export const AuditResults = ({ audit }) => {
 
       {/* Tab Content */}
       <div>
+        {activeTab === 'design' && <DesignTab audit={audit} />}
         {activeTab === 'pagespeed' && <PageSpeedTab audit={audit} />}
         {activeTab === 'wcag' && <WCAGTab audit={audit} />}
-        {activeTab === 'design' && <DesignTab audit={audit} />}
       </div>
     </div>
   );
