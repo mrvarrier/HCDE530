@@ -70,6 +70,45 @@ export const DesignTab = ({ audit }) => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Font Weights (NEW) */}
+            {typography.fontWeights && typography.fontWeights.length > 0 && (
+              <Card hover={false}>
+                <CardHeader>
+                  <CardTitle>Font Weights ({typography.fontWeights.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {typography.fontWeights.map((weight, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span className="text-gray-700" style={{ fontWeight: weight }}>
+                          Example Text
+                        </span>
+                        <span className="text-sm font-mono text-gray-600">{weight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Line Heights (NEW) */}
+            {typography.lineHeights && typography.lineHeights.length > 0 && (
+              <Card hover={false}>
+                <CardHeader>
+                  <CardTitle>Line Heights ({typography.lineHeights.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-sm">
+                    {typography.lineHeights.map((lh, index) => (
+                      <div key={index} className="text-gray-700 font-mono">
+                        {lh}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         ) : (
           <Card hover={false}>

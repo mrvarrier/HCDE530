@@ -47,12 +47,28 @@ export async function runRealAudit(url, setProgress = null) {
       throw new Error('Failed to fetch website data');
     }
 
+    // Check if website blocked or partially loaded
+    const scrapeWarnings = [];
+    if (scrapeData.scrapeStatus === 'blocked') {
+      scrapeWarnings.push({
+        type: 'error',
+        message: 'Website is blocking automated access',
+        detail: scrapeData.scrapeWarning || 'The website could not be fully scraped due to access restrictions or timeouts.'
+      });
+    } else if (scrapeData.scrapeStatus === 'partial') {
+      scrapeWarnings.push({
+        type: 'warning',
+        message: 'Website loaded partially',
+        detail: 'Some content may not have loaded completely. Results may be incomplete.'
+      });
+    }
+
     // Step 2: Run parallel analysis on scraped HTML
     updateProgress(currentStep++, steps[2]);
 
     const [a11yData, designData, iaData, perfData] = await Promise.all([
       analyzeAccessibility(scrapeData.html, url),
-      analyzeDesign(scrapeData.html, url),
+      analyzeDesign(scrapeData.html, url, scrapeData.computedStyles), // Pass computed styles
       analyzeIA(scrapeData.html, url),
       FEATURES.pageSpeedAPI ? fetchPageSpeedData(url) : Promise.resolve(null)
     ]);
@@ -94,6 +110,10 @@ export async function runRealAudit(url, setProgress = null) {
       // PageSpeed data if available
       pageSpeedData: perfData || null,
       pageSpeedAvailable: !!perfData,
+
+      // Scrape warnings (blocking, timeouts, etc.)
+      scrapeWarnings: scrapeWarnings.length > 0 ? scrapeWarnings : null,
+      scrapeStatus: scrapeData.scrapeStatus,
 
       // Metadata
       metadata: {
@@ -164,7 +184,7 @@ async function analyzeAccessibility(html, url) {
 /**
  * Analyze design system using backend API
  */
-async function analyzeDesign(html, url) {
+async function analyzeDesign(html, url, computedStyles = null) {
   const endpoint = `${BACKEND_CONFIG.baseUrl}/analyze-design`;
 
   const response = await fetch(endpoint, {
@@ -172,7 +192,7 @@ async function analyzeDesign(html, url) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ html, url }),
+    body: JSON.stringify({ html, url, computedStyles }), // Pass computed styles
     signal: AbortSignal.timeout(BACKEND_CONFIG.timeout)
   });
 

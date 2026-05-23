@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { html, url } = req.body;
+  const { html, url, computedStyles } = req.body;
 
   if (!html) {
     return res.status(400).json({ error: 'HTML is required' });
@@ -27,11 +27,18 @@ export default async function handler(req, res) {
     // Load HTML with cheerio
     const $ = load(html);
 
-    // Extract fonts
-    const fontsData = extractFonts($, html);
+    // Use computed styles if available (much more accurate), fallback to CSS parsing
+    let fontsData, colorsData;
 
-    // Extract colors
-    const colorsData = extractColors($, html);
+    if (computedStyles) {
+      console.log('[Design] Using computed styles from browser (accurate data)');
+      fontsData = processComputedTypography(computedStyles);
+      colorsData = processComputedColors(computedStyles);
+    } else {
+      console.log('[Design] Using CSS parsing (fallback - less accurate)');
+      fontsData = extractFonts($, html);
+      colorsData = extractColors($, html);
+    }
 
     // Extract spacing patterns
     const spacingData = extractSpacing(html);
@@ -42,6 +49,7 @@ export default async function handler(req, res) {
       typography: fontsData,
       colors: colorsData,
       spacing: spacingData,
+      dataSource: computedStyles ? 'computed-styles' : 'css-parsing',
       timestamp: new Date().toISOString()
     });
 
@@ -56,7 +64,96 @@ export default async function handler(req, res) {
 }
 
 /**
- * Extract font information from HTML and CSS
+ * Process computed styles from browser (NEW - more accurate)
+ */
+function processComputedTypography(computedStyles) {
+  const { fonts, fontSizes, fontWeights, lineHeights, letterSpacings } = computedStyles;
+
+  // Clean and deduplicate fonts
+  const cleanFonts = fonts
+    .map(f => f.split(',')[0].trim().replace(/['"]/g, ''))
+    .filter((f, i, arr) => arr.indexOf(f) === i && f.length > 1)
+    .filter(f => !['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui'].includes(f.toLowerCase()))
+    .slice(0, 10);
+
+  const issues = [];
+  const recommendations = [];
+
+  if (cleanFonts.length > 6) {
+    issues.push(`Using ${cleanFonts.length} different font families. Recommend 2-3 fonts maximum for consistency.`);
+  }
+
+  if (fontSizes.length > 12) {
+    issues.push(`Detected ${fontSizes.length} unique font sizes. Recommend a type scale with 6-8 sizes.`);
+  }
+
+  if (cleanFonts.length === 0) {
+    issues.push('No custom fonts detected. Site is using browser defaults.');
+  }
+
+  return {
+    fonts: cleanFonts,
+    allFontSizes: fontSizes.slice(0, 20),
+    fontWeights: fontWeights.slice(0, 10), // NEW
+    lineHeights: lineHeights.slice(0, 10), // NEW
+    letterSpacings: letterSpacings.slice(0, 10), // NEW
+    uniqueFontCount: cleanFonts.length,
+    uniqueSizeCount: fontSizes.length,
+    externalStylesheets: [],
+    issues,
+    recommendations: generateTypographyRecommendations(cleanFonts, fontSizes)
+  };
+}
+
+/**
+ * Process computed colors from browser (NEW - more accurate)
+ */
+function processComputedColors(computedStyles) {
+  const { colors, backgroundColors } = computedStyles;
+
+  // Helper to normalize RGB to hex
+  const rgbToHex = (rgb) => {
+    const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (!match) return rgb;
+
+    const r = parseInt(match[1]).toString(16).padStart(2, '0');
+    const g = parseInt(match[2]).toString(16).padStart(2, '0');
+    const b = parseInt(match[3]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  };
+
+  // Convert and deduplicate
+  const allColors = [...colors, ...backgroundColors]
+    .map(c => c.startsWith('rgb') ? rgbToHex(c) : c)
+    .filter((c, i, arr) => arr.indexOf(c) === i && c && c !== 'transparent');
+
+  const palette = allColors.slice(0, 20);
+  const bgColors = backgroundColors.map(c => c.startsWith('rgb') ? rgbToHex(c) : c).slice(0, 10);
+  const textColors = colors.map(c => c.startsWith('rgb') ? rgbToHex(c) : c).slice(0, 10);
+
+  const issues = [];
+
+  if (palette.length > 15) {
+    issues.push(`Using ${palette.length} unique colors. Recommend 8-12 colors for consistency.`);
+  }
+
+  if (palette.length < 3) {
+    issues.push('Very limited color palette. Consider adding accent colors.');
+  }
+
+  return {
+    palette,
+    backgroundColors: bgColors,
+    textColors: textColors,
+    borderColors: [], // Could be extracted similarly
+    totalUniqueColors: palette.length,
+    issues,
+    recommendations: generateColorRecommendations(palette)
+  };
+}
+
+/**
+ * Extract font information from HTML and CSS (FALLBACK)
  */
 function extractFonts($, html) {
   const fonts = new Set();

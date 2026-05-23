@@ -36,27 +36,66 @@ export default async function handler(req, res) {
     // Ensure URL has protocol
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
-    // Launch headless browser
+    // Launch headless browser with better settings
     browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled' // Avoid bot detection
+      ]
     });
 
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (compatible; UXAuditorBot/2.0)',
-      viewport: { width: 1920, height: 1080 }
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 },
+      extraHTTPHeaders: {
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
     });
 
     const page = await context.newPage();
 
-    // Set timeout for navigation
-    await page.goto(fullURL, {
-      waitUntil: 'networkidle',
-      timeout: 20000
-    });
+    let scrapeStatus = 'success';
+    let scrapeError = null;
 
-    // Wait for page to be fully loaded
-    await page.waitForLoadState('domcontentloaded');
+    // Try to navigate with multiple fallback strategies
+    try {
+      // Strategy 1: Wait for networkidle (best quality)
+      await page.goto(fullURL, {
+        waitUntil: 'networkidle',
+        timeout: 30000
+      });
+    } catch (error) {
+      console.log(`[Scrape] Networkidle timeout, trying domcontentloaded...`);
+      scrapeStatus = 'partial';
+
+      try {
+        // Strategy 2: Just wait for DOM (faster)
+        await page.goto(fullURL, {
+          waitUntil: 'domcontentloaded',
+          timeout: 15000
+        });
+      } catch (error2) {
+        console.log(`[Scrape] DOM timeout, trying basic load...`);
+
+        try {
+          // Strategy 3: Basic load only
+          await page.goto(fullURL, {
+            waitUntil: 'load',
+            timeout: 10000
+          });
+        } catch (error3) {
+          // Complete failure
+          scrapeStatus = 'blocked';
+          scrapeError = 'Website may be blocking automated access or is too slow to load';
+          throw error3;
+        }
+      }
+    }
+
+    // Wait a bit for dynamic content
+    await page.waitForTimeout(2000);
 
     // Extract HTML content
     const html = await page.content();
@@ -87,6 +126,50 @@ export default async function handler(req, res) {
       }))
     );
 
+    // IMPROVEMENT #1: Extract computed styles from rendered page
+    const computedStyles = await page.evaluate(() => {
+      const elements = document.querySelectorAll('body *');
+      const styles = {
+        fonts: new Set(),
+        fontSizes: new Set(),
+        fontWeights: new Set(),
+        lineHeights: new Set(),
+        colors: new Set(),
+        backgroundColors: new Set(),
+        letterSpacings: new Set()
+      };
+
+      // Sample up to 500 elements to avoid timeout
+      const sampleSize = Math.min(elements.length, 500);
+      const step = Math.max(1, Math.floor(elements.length / sampleSize));
+
+      for (let i = 0; i < elements.length; i += step) {
+        const el = elements[i];
+        const computed = window.getComputedStyle(el);
+
+        // Only collect if element is visible
+        if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+          styles.fonts.add(computed.fontFamily);
+          styles.fontSizes.add(computed.fontSize);
+          styles.fontWeights.add(computed.fontWeight);
+          styles.lineHeights.add(computed.lineHeight);
+          styles.colors.add(computed.color);
+          styles.backgroundColors.add(computed.backgroundColor);
+          styles.letterSpacings.add(computed.letterSpacing);
+        }
+      }
+
+      return {
+        fonts: Array.from(styles.fonts).filter(f => f && f !== 'inherit'),
+        fontSizes: Array.from(styles.fontSizes).filter(s => s && s !== 'inherit').sort((a, b) => parseFloat(a) - parseFloat(b)),
+        fontWeights: Array.from(styles.fontWeights).filter(w => w && w !== 'inherit'),
+        lineHeights: Array.from(styles.lineHeights).filter(l => l && l !== 'inherit' && l !== 'normal'),
+        colors: Array.from(styles.colors).filter(c => c && c !== 'inherit' && !c.includes('rgba(0, 0, 0, 0)')),
+        backgroundColors: Array.from(styles.backgroundColors).filter(c => c && c !== 'inherit' && !c.includes('rgba(0, 0, 0, 0)')),
+        letterSpacings: Array.from(styles.letterSpacings).filter(s => s && s !== 'inherit' && s !== 'normal')
+      };
+    });
+
     // Take screenshot
     const screenshot = await page.screenshot({
       fullPage: false,
@@ -96,9 +179,9 @@ export default async function handler(req, res) {
 
     await browser.close();
 
-    console.log(`[Scrape] Successfully scraped: ${url}`);
+    console.log(`[Scrape] Successfully scraped: ${url} (status: ${scrapeStatus})`);
 
-    // Return data
+    // Return data with scrape status
     return res.status(200).json({
       url: fullURL,
       html,
@@ -111,7 +194,10 @@ export default async function handler(req, res) {
         headings,
         metaTags
       },
+      computedStyles, // NEW: Actual rendered styles
       screenshot,
+      scrapeStatus, // NEW: success, partial, or blocked
+      scrapeWarning: scrapeStatus !== 'success' ? 'Website loaded with issues - some data may be incomplete' : null,
       timestamp: new Date().toISOString()
     });
 
@@ -119,13 +205,27 @@ export default async function handler(req, res) {
     console.error(`[Scrape] Error scraping ${url}:`, error.message);
 
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('[Scrape] Error closing browser:', closeError.message);
+      }
     }
+
+    // Determine if this is a blocking/timeout issue or other error
+    const isTimeout = error.message.includes('Timeout') || error.message.includes('timeout');
+    const isBlocked = error.message.includes('net::ERR') || error.message.includes('NS_ERROR');
 
     return res.status(500).json({
       error: 'Failed to scrape website',
       message: error.message,
-      url
+      url,
+      blocked: isTimeout || isBlocked,
+      suggestion: isTimeout
+        ? 'Website took too long to load or is blocking automated access. Try a simpler website or check if the site is accessible.'
+        : isBlocked
+        ? 'Website is blocking automated access or has network restrictions.'
+        : 'An unexpected error occurred while scraping.'
     });
   }
 }
