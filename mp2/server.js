@@ -85,7 +85,12 @@ app.use((req, res, next) => {
     return next();
   }
 
-  // For all other routes, serve index.html
+  // Skip static asset requests (they should have been handled by express.static)
+  if (req.path.startsWith('/assets/') || req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
+
+  // For all other routes (HTML5 routing), serve index.html
   res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
     if (err) {
       next(err);
