@@ -23,13 +23,13 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install root dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (needed for build)
+RUN npm ci
 
 # Copy api package files
 COPY api/package*.json ./api/
 
-# Install api dependencies
+# Install api dependencies (production only)
 RUN cd api && npm ci --only=production
 
 # Copy source code
@@ -37,6 +37,9 @@ COPY . .
 
 # Build frontend
 RUN npm run build
+
+# Remove devDependencies after build to reduce image size
+RUN npm prune --production
 
 # Expose port
 EXPOSE 3000
