@@ -48,7 +48,6 @@ export default async function handler(req, res) {
       args: chromiumPkg.args,
       executablePath: await chromiumPkg.executablePath(),
       headless: chromiumPkg.headless
-      ]
     });
 
     // IMPROVEMENT #2: Multi-Viewport Testing (NEW - Phase 2)
