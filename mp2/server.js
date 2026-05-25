@@ -78,9 +78,19 @@ app.options('/api/:endpoint', (req, res) => {
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Serve index.html for all other routes (SPA)
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// SPA fallback: serve index.html for any route that doesn't match static files or API
+app.use((req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
+  // For all other routes, serve index.html
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
+    if (err) {
+      next(err);
+    }
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
