@@ -8,9 +8,9 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^126.0.0",
     "axe-core": "^4.8.3",
     "cheerio": "^1.0.0-rc.12",
-    "chrome-aws-lambda": "^10.1.0",
     "cors": "^2.8.5",
     "express": "^4.22.2",
     "node-fetch": "^3.3.2",

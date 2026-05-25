@@ -4,7 +4,7 @@
  */
 
 import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+import chromium from '@sparticuz/chromium';
 
 // CORS headers for allowing frontend requests
 const corsHeaders = {
@@ -43,11 +43,13 @@ export default async function handler(req, res) {
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
     // Launch headless browser with better settings
-    // Use chrome-aws-lambda for Vercel deployment
+    // Use @sparticuz/chromium for Vercel deployment
     browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+      ignoreHTTPSErrors: true
     });
 
     // IMPROVEMENT #2: Multi-Viewport Testing (NEW - Phase 2)
