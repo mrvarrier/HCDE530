@@ -1,10 +1,10 @@
 /**
  * Web Scraping Endpoint
- * Fetches website HTML and metadata using Playwright headless browser
+ * Fetches website HTML and metadata using Puppeteer headless browser
  */
 
-import { chromium } from 'playwright-core';
-import chromiumPkg from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 
 // CORS headers for allowing frontend requests
 const corsHeaders = {
@@ -43,11 +43,11 @@ export default async function handler(req, res) {
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
     // Launch headless browser with better settings
-    // Use serverless chromium for Vercel deployment
-    browser = await chromium.launch({
-      args: chromiumPkg.args,
-      executablePath: await chromiumPkg.executablePath(),
-      headless: true
+    // Use chrome-aws-lambda for Vercel deployment
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless
     });
 
     // IMPROVEMENT #2: Multi-Viewport Testing (NEW - Phase 2)
@@ -59,15 +59,14 @@ export default async function handler(req, res) {
     ];
 
     // Start with desktop viewport for main scrape
-    const context = await browser.newContext({
-      userAgent: viewports[2].userAgent,
-      viewport: { width: viewports[2].width, height: viewports[2].height },
-      extraHTTPHeaders: {
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
+    const page = await browser.newPage();
 
-    const page = await context.newPage();
+    // Set viewport and user agent
+    await page.setViewport({ width: viewports[2].width, height: viewports[2].height });
+    await page.setUserAgent(viewports[2].userAgent);
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9'
+    });
 
     let scrapeStatus = 'success';
     let scrapeError = null;
@@ -76,7 +75,7 @@ export default async function handler(req, res) {
     try {
       // Strategy 1: Wait for networkidle (best quality)
       await page.goto(fullURL, {
-        waitUntil: 'networkidle',
+        waitUntil: 'networkidle0',
         timeout: 30000
       });
     } catch (error) {
@@ -108,7 +107,7 @@ export default async function handler(req, res) {
     }
 
     // Wait a bit for dynamic content
-    await page.waitForTimeout(2000);
+    await page.waitFor(2000);
 
     // Extract HTML content
     let html = await page.content();
@@ -418,8 +417,8 @@ export default async function handler(req, res) {
 
       try {
         // Set viewport size
-        await page.setViewportSize({ width: viewport.width, height: viewport.height });
-        await page.waitForTimeout(1000); // Wait for responsive changes
+        await page.setViewport({ width: viewport.width, height: viewport.height });
+        await page.waitFor(1000); // Wait for responsive changes
 
         // Capture viewport-specific data
         const viewportInfo = await page.evaluate(() => {
