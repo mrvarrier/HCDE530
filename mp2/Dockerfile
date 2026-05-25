@@ -23,19 +23,19 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install ALL dependencies (needed for build)
-RUN npm ci
+# Install ALL dependencies including dev (needed for Vite build)
+RUN npm install
 
 # Copy api package files
 COPY api/package*.json ./api/
 
 # Install api dependencies (production only)
-RUN cd api && npm ci --only=production
+RUN cd api && npm install --production
 
 # Copy source code
 COPY . .
 
-# Build frontend
+# Build frontend with Vite
 RUN npm run build
 
 # Remove devDependencies after build to reduce image size
