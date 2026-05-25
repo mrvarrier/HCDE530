@@ -43,14 +43,34 @@ export default async function handler(req, res) {
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
     // Launch headless browser with better settings
-    // Use @sparticuz/chromium for Vercel deployment
-    browser = await puppeteer.launch({
-      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+    // Use system Chromium if available (Docker), otherwise @sparticuz/chromium (serverless)
+    const isDocker = process.env.PUPPETEER_EXECUTABLE_PATH || false;
+
+    const launchOptions = {
       headless: true,
-      ignoreHTTPSErrors: true
-    });
+      ignoreHTTPSErrors: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    };
+
+    if (isDocker) {
+      // Use system-installed Chromium (Docker environment)
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    } else {
+      // Use @sparticuz/chromium (serverless environment)
+      launchOptions.executablePath = await chromium.executablePath();
+      launchOptions.args = [...chromium.args, ...launchOptions.args];
+      launchOptions.defaultViewport = chromium.defaultViewport;
+    }
+
+    browser = await puppeteer.launch(launchOptions);
 
     // IMPROVEMENT #2: Multi-Viewport Testing (NEW - Phase 2)
     // Define viewports to test
