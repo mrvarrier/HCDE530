@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     browser = await chromium.launch({
       args: chromiumPkg.args,
       executablePath: await chromiumPkg.executablePath(),
-      headless: chromiumPkg.headless
+      headless: true
     });
 
     // IMPROVEMENT #2: Multi-Viewport Testing (NEW - Phase 2)
