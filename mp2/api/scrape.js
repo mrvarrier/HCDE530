@@ -3,7 +3,8 @@
  * Fetches website HTML and metadata using Playwright headless browser
  */
 
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
+import chromiumPkg from '@sparticuz/chromium';
 
 // CORS headers for allowing frontend requests
 const corsHeaders = {
@@ -42,12 +43,11 @@ export default async function handler(req, res) {
     const fullURL = url.startsWith('http') ? url : `https://${url}`;
 
     // Launch headless browser with better settings
+    // Use serverless chromium for Vercel deployment
     browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled' // Avoid bot detection
+      args: chromiumPkg.args,
+      executablePath: await chromiumPkg.executablePath(),
+      headless: chromiumPkg.headless
       ]
     });
 
