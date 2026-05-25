@@ -25,21 +25,49 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// API routes
+// API routes - wrap Vercel handlers for Express compatibility
 app.post('/api/scrape', async (req, res) => {
-  await scrapeHandler(req, res);
+  try {
+    await scrapeHandler(req, res);
+  } catch (error) {
+    console.error('[Server] Error in /api/scrape:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+  }
 });
 
 app.post('/api/analyze-accessibility', async (req, res) => {
-  await analyzeAccessibilityHandler(req, res);
+  try {
+    await analyzeAccessibilityHandler(req, res);
+  } catch (error) {
+    console.error('[Server] Error in /api/analyze-accessibility:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+  }
 });
 
 app.post('/api/analyze-design', async (req, res) => {
-  await analyzeDesignHandler(req, res);
+  try {
+    await analyzeDesignHandler(req, res);
+  } catch (error) {
+    console.error('[Server] Error in /api/analyze-design:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+  }
 });
 
 app.post('/api/analyze-ia', async (req, res) => {
-  await analyzeIAHandler(req, res);
+  try {
+    await analyzeIAHandler(req, res);
+  } catch (error) {
+    console.error('[Server] Error in /api/analyze-ia:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+  }
 });
 
 // Handle OPTIONS for CORS preflight

@@ -9,23 +9,28 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    udev \
-    bash
+    nodejs \
+    npm
 
 # Tell Puppeteer to use installed Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
+
+# Install root dependencies
+RUN npm ci --only=production
+
+# Copy api package files
 COPY api/package*.json ./api/
 
-# Install dependencies
-RUN npm install
-RUN cd api && npm install
+# Install api dependencies
+RUN cd api && npm ci --only=production
 
 # Copy source code
 COPY . .
@@ -36,5 +41,9 @@ RUN npm run build
 # Expose port
 EXPOSE 3000
 
-# Start command - serve frontend and API
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Start server
 CMD ["node", "server.js"]
