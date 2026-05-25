@@ -71,7 +71,7 @@ app.post('/api/analyze-ia', async (req, res) => {
 });
 
 // Handle OPTIONS for CORS preflight
-app.options('/api/*', (req, res) => {
+app.options('/api/:endpoint', (req, res) => {
   res.status(200).json({ ok: true });
 });
 
