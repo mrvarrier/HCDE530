@@ -14,8 +14,7 @@ RUN apk add --no-cache \
 
 # Tell Puppeteer to use installed Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    NODE_ENV=production
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Set working directory
 WORKDIR /app
@@ -24,7 +23,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies including dev (needed for Vite build)
-RUN npm install
+# Explicitly set NODE_ENV to ensure devDependencies are installed
+RUN NODE_ENV=development npm install
 
 # Copy api package files
 COPY api/package*.json ./api/
@@ -40,6 +40,9 @@ RUN npm run build
 
 # Remove devDependencies after build to reduce image size
 RUN npm prune --production
+
+# Set NODE_ENV to production for runtime
+ENV NODE_ENV=production
 
 # Expose port
 EXPOSE 3000
