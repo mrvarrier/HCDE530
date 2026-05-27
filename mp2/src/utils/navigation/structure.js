@@ -12,7 +12,7 @@ export function analyzeNavigationStructure($) {
   const nav = $('nav').first()
   const issues = []
 
-  if (!nav.length) {
+  if (!nav.length || nav.length === 0) {
     return {
       maxDepth: 0,
       topLevelItems: 0,
@@ -26,17 +26,38 @@ export function analyzeNavigationStructure($) {
     }
   }
 
-  // Count nesting levels of lists
+  // Count nesting levels of lists - check within the nav scope
   let maxDepth = 0
-  nav.find('ul, ol').each((i, elem) => {
-    const $elem = $(elem)
-    const parents = $elem.parents('ul, ol')
-    const depth = parents.length + 1
-    maxDepth = Math.max(maxDepth, depth)
-  })
+  const listsInNav = nav.find('ul, ol')
 
-  // Count top-level navigation items
-  const topLevelItems = nav.find('> ul > li, > ol > li, > div > ul > li, > div > ol > li').length
+  if (listsInNav.length > 0) {
+    listsInNav.each((i, elem) => {
+      const $elem = $(elem)
+      // Count parent lists within the nav element
+      const parents = $elem.parentsUntil(nav, 'ul, ol')
+      const depth = parents.length + 1
+      maxDepth = Math.max(maxDepth, depth)
+    })
+  }
+
+  // Count top-level navigation items - be more flexible with structure
+  let topLevelItems = 0
+
+  // Try different common nav structures
+  const directListItems = nav.find('> ul > li, > ol > li')
+  const wrappedListItems = nav.find('> div > ul > li, > div > ol > li, > ul:first > li, > ol:first > li')
+
+  if (directListItems.length > 0) {
+    topLevelItems = directListItems.length
+  } else if (wrappedListItems.length > 0) {
+    topLevelItems = wrappedListItems.length
+  } else {
+    // Fallback: count first-level list items
+    const firstList = nav.find('ul, ol').first()
+    if (firstList.length > 0) {
+      topLevelItems = firstList.children('li').length
+    }
+  }
 
   // Count total navigation items
   const totalNavItems = nav.find('li').length
