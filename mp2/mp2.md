@@ -1,6 +1,6 @@
 # MP2 Competency Claims: UX Auditor
 
-**Project URL**: [Your Vercel Deployment URL]
+**Project URL**: https://mp2-gamma.vercel.app/
 **Repository**: https://github.com/mrvarrier/HCDE530/tree/main/mp2
 **Completion Date**: 2026-05-26
 
@@ -14,7 +14,7 @@ I built **UX Auditor**, a professional web application that freelance UX consult
 1. **HTML File Analysis**: Upload any HTML file to get WCAG 2.1 accessibility compliance checks (color contrast, heading hierarchy, alt text, form labels, ARIA attributes) and navigation structure analysis
 2. **PageSpeed Insights Integration**: Enter any live URL to get real-time performance metrics from Google PageSpeed Insights API, including Core Web Vitals, optimization opportunities, and accessibility scores
 
-The tool is **fully deployed and usable** at [Your Vercel URL]. Users can analyze files, view interactive reports with charts, and export results as JSON, CSV, or PDF.
+The tool is **fully deployed and usable** at https://mp2-gamma.vercel.app/. Users can analyze files, view interactive reports with charts, and export results as JSON, CSV, or PDF.
 
 ### Real Use Case
 This tool solves a real problem for **freelance UX consultants** who need to:
@@ -68,7 +68,7 @@ I initially didn't validate HTML file size (users could upload 50MB files and cr
 
 ### Evidence of Completion
 
-**Deployed Application**: [Your Vercel URL]
+**Deployed Application**: https://mp2-gamma.vercel.app/
 - Live and functional
 - Two analysis modes working (HTML upload + PageSpeed URL)
 - Export functionality (JSON, CSV, PDF) tested and working

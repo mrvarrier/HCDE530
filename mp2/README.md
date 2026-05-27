@@ -30,7 +30,7 @@ Enter any live website URL and get real-time performance metrics from Google Pag
 ## How to Use It
 
 ### Access the Live Tool
-Visit: **[Your Vercel Deployment URL]**
+Visit: **https://mp2-gamma.vercel.app/**
 
 ### For HTML File Analysis:
 1. Click the **"HTML File Analysis"** tab
@@ -201,12 +201,33 @@ Output will be in the `dist/` folder.
 ## Technology Stack
 
 - **Frontend**: React 18, Vite 5, TailwindCSS 3.4
-- **UI Components**: Lucide React (icons), Recharts (charts)
-- **HTML Parsing**: Cheerio 1.0 (server-side)
-- **Color Analysis**: Chroma.js 2.4 (contrast ratio calculations)
-- **PDF Generation**: jsPDF + jspdf-autotable
+- **UI Components**: Lucide React (icons), Recharts 2 (data visualization)
+- **HTML Parsing**: Cheerio 1.0 (server-side DOM manipulation)
+- **Color Analysis**: Chroma.js 2.4 (WCAG contrast ratio calculations)
+- **PDF Generation**: jsPDF 2.5.2 + jspdf-autotable 3.8.4
 - **API Integration**: Google PageSpeed Insights API v5
-- **Deployment**: Vercel (serverless functions)
+- **Deployment**: Vercel (serverless functions with 60s timeout)
+
+## Recent Updates
+
+### Version 1.2 (May 26, 2026)
+- ✅ **Website Favicon**: Added complete favicon package with support for all devices and browsers
+- ✅ **PageSpeed Insights**: Real-time performance analysis with Core Web Vitals
+- ✅ **PDF Export**: Professional PDF reports with tables and multi-page support
+- ✅ **Enhanced Meta Tags**: SEO-optimized meta description and theme color
+- ✅ **Upgraded Libraries**: jsPDF v2.5.2 for better PDF compatibility
+
+### Version 1.1 (May 25, 2026)
+- ✅ **Modern UI/UX**: Gradient designs, animations, and improved data visualization
+- ✅ **Progress Bars**: Visual pass rate indicators in accessibility report
+- ✅ **Pie Charts**: Issue distribution visualization using Recharts
+- ✅ **Export Options**: JSON, CSV, and PDF export functionality
+
+### Version 1.0 (May 24, 2026)
+- ✅ **Initial Release**: HTML accessibility and navigation analysis
+- ✅ **WCAG 2.1 Compliance Checks**: 5 comprehensive accessibility categories
+- ✅ **Navigation Analysis**: Link classification and structure validation
+- ✅ **Vercel Deployment**: Serverless architecture with automatic deployments
 
 ## Limitations & Known Issues
 
