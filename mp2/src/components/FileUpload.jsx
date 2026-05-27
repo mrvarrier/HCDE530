@@ -90,16 +90,16 @@ export default function FileUpload({ onFileUpload }) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       <div
-        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors ${
+        className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-300 ${
           dragActive
-            ? 'border-blue-500 bg-blue-50'
+            ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl scale-105'
             : error
-            ? 'border-red-300 bg-red-50'
+            ? 'border-red-400 bg-red-50 shadow-lg'
             : selectedFile
-            ? 'border-green-300 bg-green-50'
-            : 'border-gray-300 bg-white hover:border-gray-400'
+            ? 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg'
+            : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-lg hover:bg-gradient-to-br hover:from-blue-50/30 hover:to-purple-50/30'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -116,54 +116,74 @@ export default function FileUpload({ onFileUpload }) {
 
         {!selectedFile && !error && (
           <div className="text-center">
-            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-            <div className="mt-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-6">
+              <Upload className="h-10 w-10 text-blue-600" />
+            </div>
+            <div className="mb-4">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-blue-600 hover:text-blue-500 font-medium"
+                className="text-lg font-semibold text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4 decoration-blue-400 transition-colors"
               >
                 Click to browse
               </button>
-              <span className="text-gray-600"> or drag and drop</span>
+              <span className="text-lg text-gray-700"> or drag and drop your HTML file here</span>
             </div>
-            <p className="mt-2 text-sm text-gray-500">
-              HTML files only (max 5MB)
-            </p>
+            <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+              <div className="flex items-center space-x-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                </svg>
+                <span>.html, .htm files only</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Maximum 5MB</span>
+              </div>
+            </div>
           </div>
         )}
 
         {selectedFile && !error && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <File className="h-8 w-8 text-green-600" />
+          <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-5 duration-300">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-xl">
+                <File className="h-8 w-8 text-green-600" />
+              </div>
               <div>
-                <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                <p className="text-sm text-gray-500">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
-                </p>
+                <p className="font-semibold text-gray-900 text-lg">{selectedFile.name}</p>
+                <div className="flex items-center space-x-3 mt-1">
+                  <p className="text-sm text-gray-600">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
+                  </p>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Ready to analyze
+                  </span>
+                </div>
               </div>
             </div>
             <button
               onClick={handleClear}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              className="p-3 text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-all"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
         )}
 
         {error && (
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-              <X className="h-6 w-6 text-red-600" />
+          <div className="text-center animate-in fade-in slide-in-from-top-5 duration-300">
+            <div className="mx-auto w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <X className="h-8 w-8 text-red-600" />
             </div>
-            <p className="mt-4 text-red-800 font-medium">{error}</p>
+            <p className="text-lg text-red-800 font-semibold mb-6">{error}</p>
             <button
               onClick={handleClear}
-              className="mt-4 text-sm text-red-600 hover:text-red-500 font-medium"
+              className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-medium shadow-lg"
             >
-              Try another file
+              Try Another File
             </button>
           </div>
         )}

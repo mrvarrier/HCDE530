@@ -16,26 +16,39 @@ function CategorySection({ category, data }) {
   const hasIssues = data.issues && data.issues.length > 0
   const passed = data.passed || 0
   const failed = data.failed || data.issues?.length || 0
+  const total = passed + failed
+  const passRate = total > 0 ? ((passed / total) * 100).toFixed(0) : 100
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-gray-50 hover:bg-gray-100 px-4 py-3 flex items-center justify-between transition-colors"
+        className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 px-6 py-4 flex items-center justify-between transition-all"
       >
-        <div className="flex items-center space-x-3">
-          <span className="text-2xl">{category.icon}</span>
-          <div className="text-left">
-            <h3 className="font-semibold text-gray-900">{category.label}</h3>
-            <div className="flex items-center space-x-4 mt-1 text-sm">
-              <div className="flex items-center space-x-1 text-green-600">
+        <div className="flex items-center space-x-4 flex-1">
+          <div className="flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-sm">
+            <span className="text-3xl">{category.icon}</span>
+          </div>
+          <div className="text-left flex-1">
+            <h3 className="font-bold text-gray-900 text-lg">{category.label}</h3>
+            <div className="flex items-center space-x-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-full bg-gray-200 rounded-full h-2" style={{width: '120px'}}>
+                  <div
+                    className={`h-2 rounded-full transition-all ${passRate >= 80 ? 'bg-green-500' : passRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{width: `${passRate}%`}}
+                  ></div>
+                </div>
+                <span className="text-sm font-semibold text-gray-700">{passRate}%</span>
+              </div>
+              <div className="flex items-center space-x-1 text-green-700 bg-green-100 px-3 py-1 rounded-full">
                 <CheckCircle className="h-4 w-4" />
-                <span>{passed} passed</span>
+                <span className="text-sm font-semibold">{passed}</span>
               </div>
               {failed > 0 && (
-                <div className="flex items-center space-x-1 text-red-600">
+                <div className="flex items-center space-x-1 text-red-700 bg-red-100 px-3 py-1 rounded-full">
                   <XCircle className="h-4 w-4" />
-                  <span>{failed} issues</span>
+                  <span className="text-sm font-semibold">{failed}</span>
                 </div>
               )}
             </div>
@@ -88,12 +101,19 @@ function CategorySection({ category, data }) {
 
 export default function AccessibilityReport({ accessibility }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Accessibility Report
-      </h2>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+      <div className="flex items-center space-x-3 mb-8">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl shadow-lg">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+          </svg>
+        </div>
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Accessibility Report
+        </h2>
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {categories.map((category) => (
           <CategorySection
             key={category.key}

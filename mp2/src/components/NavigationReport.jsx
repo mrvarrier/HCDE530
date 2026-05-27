@@ -5,22 +5,25 @@ export default function NavigationReport({ navigation }) {
   const { structure, links, issues } = navigation
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Navigation Report
-      </h2>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+      <div className="flex items-center space-x-3 mb-8">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg">
+          <Navigation className="w-6 h-6 text-white" />
+        </div>
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          Navigation Report
+        </h2>
+      </div>
 
       {/* Navigation Structure */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Navigation className="h-5 w-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">
-            Navigation Structure
-          </h3>
-        </div>
+      <div className="mb-8">
+        <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center space-x-2">
+          <div className="w-2 h-8 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
+          <span>Navigation Structure</span>
+        </h3>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-5">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border-l-4 border-blue-500 shadow-md">
             <div className="text-sm text-gray-600">Maximum Depth</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
               {structure.maxDepth} {structure.maxDepth === 1 ? 'level' : 'levels'}
