@@ -1,6 +1,6 @@
 import { Download, FileJson, FileSpreadsheet, FileText } from 'lucide-react'
 import { exportJSON, exportCSV } from '../utils/export'
-import { jsPDF } from 'jspdf'
+import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
 export default function ExportButtons({ data }) {
