@@ -12,8 +12,12 @@
     }
   ],
   "functions": {
-    "api/**/*.js": {
+    "api/analyze.js": {
       "maxDuration": 10,
+      "memory": 1024
+    },
+    "api/pagespeed.js": {
+      "maxDuration": 60,
       "memory": 1024
     }
   }

@@ -43,17 +43,31 @@ export default async function handler(req, res) {
       })
     }
 
-    // Call PageSpeed Insights API
+    // Call PageSpeed Insights API with timeout
     const categories = ['performance', 'accessibility', 'best-practices', 'seo']
     const strategy = 'mobile' // Can also be 'desktop'
 
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${apiKey}&strategy=${strategy}&category=${categories.join('&category=')}`
 
-    const response = await fetch(apiUrl)
+    // Set a timeout for the fetch request (50 seconds)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 50000)
+
+    const response = await fetch(apiUrl, {
+      signal: controller.signal
+    })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error?.message || 'PageSpeed API request failed')
+      let errorMessage = 'PageSpeed API request failed'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error?.message || errorMessage
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`
+      }
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
@@ -114,6 +128,14 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('PageSpeed API error:', error)
+
+    // Handle different error types
+    if (error.name === 'AbortError') {
+      return res.status(504).json({
+        error: 'Request timeout',
+        message: 'PageSpeed analysis took too long. Please try again with a simpler page.'
+      })
+    }
 
     return res.status(500).json({
       error: 'PageSpeed analysis failed',
