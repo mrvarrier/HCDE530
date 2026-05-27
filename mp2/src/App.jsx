@@ -5,10 +5,14 @@ import ReportHeader from './components/ReportHeader'
 import AccessibilityReport from './components/AccessibilityReport'
 import NavigationReport from './components/NavigationReport'
 import ExportButtons from './components/ExportButtons'
+import PageSpeedInsights from './components/PageSpeedInsights'
+import PageSpeedResults from './components/PageSpeedResults'
 
 function App() {
+  const [activeTab, setActiveTab] = useState('html') // 'html' or 'pagespeed'
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [results, setResults] = useState(null)
+  const [pageSpeedData, setPageSpeedData] = useState(null)
   const [error, setError] = useState(null)
 
   const handleFileUpload = async (html, filename) => {
@@ -38,8 +42,17 @@ function App() {
     }
   }
 
+  const handleAnalysisComplete = (data, type) => {
+    if (type === 'html') {
+      setResults(data)
+    } else if (type === 'pagespeed') {
+      setPageSpeedData(data)
+    }
+  }
+
   const handleReset = () => {
     setResults(null)
+    setPageSpeedData(null)
     setError(null)
   }
 
@@ -61,9 +74,42 @@ function App() {
           </p>
         </header>
 
-        {/* File Upload */}
-        {!results && !isAnalyzing && (
+        {/* Tabs */}
+        {!results && !pageSpeedData && !isAnalyzing && (
+          <div className="mb-8">
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setActiveTab('html')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                  activeTab === 'html'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border-2 border-gray-200'
+                }`}
+              >
+                HTML File Analysis
+              </button>
+              <button
+                onClick={() => setActiveTab('pagespeed')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                  activeTab === 'pagespeed'
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border-2 border-gray-200'
+                }`}
+              >
+                PageSpeed Insights
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* HTML File Upload */}
+        {activeTab === 'html' && !results && !isAnalyzing && (
           <FileUpload onFileUpload={handleFileUpload} />
+        )}
+
+        {/* PageSpeed Insights */}
+        {activeTab === 'pagespeed' && !pageSpeedData && !isAnalyzing && (
+          <PageSpeedInsights onAnalysisComplete={handleAnalysisComplete} />
         )}
 
         {/* Error Display */}
@@ -96,7 +142,7 @@ function App() {
         {/* Loading State */}
         {isAnalyzing && <LoadingState />}
 
-        {/* Results */}
+        {/* HTML Analysis Results */}
         {results && (
           <div className="space-y-6">
             <ReportHeader
@@ -121,6 +167,27 @@ function App() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                   <span>Analyze Another File</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PageSpeed Results */}
+        {pageSpeedData && (
+          <div className="space-y-6">
+            <PageSpeedResults data={pageSpeedData} />
+
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <span className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>Analyze Another URL</span>
                 </span>
               </button>
             </div>
