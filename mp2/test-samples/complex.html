@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page with Accessibility Issues</title>
+    <style>
+        body { background-color: #FFFFFF; margin: 20px; }
+        .text-gray-400 { color: #9CA3AF; }
+        .bg-gray-100 { background-color: #F3F4F6; }
+        .low-contrast { color: #CCCCCC; background-color: #FFFFFF; }
+        nav { background-color: #333; padding: 10px; }
+        nav a { color: white; padding: 5px 10px; text-decoration: none; }
+        .btn-disabled { color: #AAAAAA; background-color: #F0F0F0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <!-- Multiple H1s (issue) -->
+    <h1>Main Title</h1>
+    <h1>Second Main Title</h1>
+
+    <!-- Skipped heading level -->
+    <h2>Section Title</h2>
+    <h4>Subsection Title</h4>
+
+    <!-- Image without alt -->
+    <img src="logo.png" width="100">
+
+    <!-- Image with empty alt (non-decorative) -->
+    <img src="hero-image.jpg" alt="" width="800" height="400">
+
+    <!-- Image with poor alt text -->
+    <img src="photo.jpg" alt="image of a sunset over the ocean with boats and birds flying">
+
+    <!-- Low contrast text -->
+    <p class="text-gray-400">This text has low contrast against white background.</p>
+    <p class="low-contrast">This text also has very low contrast.</p>
+
+    <div class="btn-disabled">Disabled Button Text</div>
+
+    <!-- Form without labels -->
+    <form>
+        <input type="text" id="name" placeholder="Enter your name">
+        <input type="email" placeholder="Email">
+        <textarea placeholder="Message"></textarea>
+
+        <!-- Radio group without fieldset -->
+        <input type="radio" name="gender" id="male"> Male
+        <input type="radio" name="gender" id="female"> Female
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Navigation too deep (3 levels) -->
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a>
+                <ul>
+                    <li><a href="/about/team">Team</a>
+                        <ul>
+                            <li><a href="/about/team/management">Management</a></li>
+                            <li><a href="/about/team/staff">Staff</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/about/history">History</a></li>
+                </ul>
+            </li>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/portfolio">Portfolio</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/press">Press</a></li>
+        </ul>
+    </nav>
+
+    <!-- Links with issues -->
+    <a href="">Empty link</a>
+    <a href="#">Placeholder link</a>
+    <a href="https://example.com" target="_blank">External link</a>
+    <a href="#section">Jump to section</a>
+    <a>Link without href</a>
+
+    <!-- Button without accessible name -->
+    <button></button>
+
+    <!-- Link without accessible name -->
+    <a href="/more"><img src="arrow.png" alt=""></a>
+
+    <!-- Empty heading -->
+    <h3></h3>
+
+    <!-- ARIA issues -->
+    <div role="button">Click me</div>
+    <nav>
+        <ul>
+            <li><a href="/main">Main Navigation</a></li>
+        </ul>
+    </nav>
+    <nav>
+        <ul>
+            <li><a href="/footer">Footer Navigation</a></li>
+        </ul>
+    </nav>
+
+    <!-- Positive tabindex -->
+    <button tabindex="5">Bad Tab Order</button>
+
+    <main>
+        <h2>Main Content</h2>
+        <p>This is the main content area with some text.</p>
+    </main>
+
+    <main>
+        <h2>Second Main?</h2>
+        <p>Multiple main elements are not allowed.</p>
+    </main>
+</body>
+</html>
