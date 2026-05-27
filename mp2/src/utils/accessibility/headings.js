@@ -25,7 +25,9 @@ export function analyzeHeadings($) {
   // Collect all headings
   $('h1, h2, h3, h4, h5, h6').each((i, elem) => {
     const $elem = $(elem)
-    const level = parseInt(elem.tagName[1], 10)
+    // Handle both elem.tagName and elem.name (Cheerio compatibility)
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
+    const level = parseInt(tagName.replace('h', ''), 10)
     const text = getText($elem)
     const selector = getSelector(elem, $)
 

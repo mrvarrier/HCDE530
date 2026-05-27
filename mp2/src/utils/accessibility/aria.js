@@ -19,7 +19,7 @@ export function analyzeAria($) {
   $('nav, main, aside, section, form').each((i, elem) => {
     checksPerformed++
     const $elem = $(elem)
-    const tagName = elem.tagName.toLowerCase()
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
     const role = $elem.attr('role')
     const ariaLabel = $elem.attr('aria-label')
     const ariaLabelledby = $elem.attr('aria-labelledby')
@@ -79,11 +79,12 @@ export function analyzeAria($) {
     const ariaLabelledby = $button.attr('aria-labelledby')
     const title = $button.attr('title')
     const selector = getSelector(elem, $)
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
 
     if (!text && !ariaLabel && !ariaLabelledby && !title) {
       issues.push({
         severity: 'serious',
-        element: elem.tagName.toLowerCase(),
+        element: tagName,
         selector,
         description: 'Button has no accessible name',
         wcag: '4.1.2 Name, Role, Value',
@@ -137,6 +138,7 @@ export function analyzeAria($) {
   $('[class], [id]').each((i, elem) => {
     const $elem = $(elem)
     const attrs = Object.keys(elem.attribs || {})
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
 
     attrs.forEach(attr => {
       if (attr.startsWith('aria-')) {
@@ -147,7 +149,7 @@ export function analyzeAria($) {
         if (value === '' || value === undefined) {
           issues.push({
             severity: 'moderate',
-            element: elem.tagName.toLowerCase(),
+            element: tagName,
             selector: getSelector(elem, $),
             description: `Empty ARIA attribute: ${attr}`,
             wcag: '4.1.2 Name, Role, Value',
@@ -166,11 +168,12 @@ export function analyzeAria($) {
     const $elem = $(elem)
     const tabindex = parseInt($elem.attr('tabindex'), 10)
     const selector = getSelector(elem, $)
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
 
     if (tabindex > 0) {
       issues.push({
         severity: 'moderate',
-        element: elem.tagName.toLowerCase(),
+        element: tagName,
         selector,
         description: `Positive tabindex value (${tabindex}) disrupts natural tab order`,
         wcag: '2.4.3 Focus Order',

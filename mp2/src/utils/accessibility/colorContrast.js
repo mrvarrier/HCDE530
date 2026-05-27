@@ -75,10 +75,11 @@ export function analyzeColorContrast($) {
       // Check if passes
       if (contrastRatio < requiredRatio) {
         const severity = contrastRatio < (requiredRatio - 1.5) ? 'serious' : 'moderate'
+        const tagName = (elem.tagName || elem.name || '').toLowerCase()
 
         issues.push({
           severity,
-          element: elem.tagName.toLowerCase(),
+          element: tagName,
           selector,
           foreground: fgChroma.hex(),
           background: bgChroma.hex(),

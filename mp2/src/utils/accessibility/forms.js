@@ -26,6 +26,7 @@ export function analyzeForms($) {
     const ariaLabel = $input.attr('aria-label')
     const ariaLabelledby = $input.attr('aria-labelledby')
     const selector = getSelector(elem, $)
+    const tagName = (elem.tagName || elem.name || '').toLowerCase()
 
     // Skip hidden and submit buttons
     if (type === 'hidden' || type === 'submit' || type === 'button') {
@@ -44,7 +45,7 @@ export function analyzeForms($) {
     if (!hasLabel && !hasAriaLabel && !hasTitle) {
       issues.push({
         severity: 'serious',
-        element: elem.tagName.toLowerCase(),
+        element: tagName,
         selector,
         id: id || name || '(no id)',
         description: 'Input field has no associated label',
@@ -58,7 +59,7 @@ export function analyzeForms($) {
     if (placeholder && !hasLabel && !hasAriaLabel) {
       issues.push({
         severity: 'moderate',
-        element: elem.tagName.toLowerCase(),
+        element: tagName,
         selector,
         description: 'Using placeholder as label (not accessible)',
         wcag: '3.3.2 Labels or Instructions',
@@ -76,7 +77,7 @@ export function analyzeForms($) {
           !ariaLabel?.includes('required') && !$input.attr('aria-required')) {
         issues.push({
           severity: 'minor',
-          element: elem.tagName.toLowerCase(),
+          element: tagName,
           selector,
           description: 'Required field without clear indication in label',
           wcag: '3.3.2 Labels or Instructions',

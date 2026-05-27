@@ -16,8 +16,8 @@ export function getSelector(elem, $) {
 
   // Build selector from bottom up
   let current = $elem
-  while (current.length && current[0].tagName !== 'html') {
-    const tag = current[0].tagName || ''
+  while (current.length && current[0] && (current[0].tagName || current[0].name) !== 'html') {
+    const tag = (current[0].tagName || current[0].name || '').toLowerCase()
     const id = current.attr('id')
     const classes = current.attr('class')
 
@@ -227,7 +227,7 @@ export function getFontSize($elem) {
   }
 
   // Check tag name for heading sizes
-  const tag = $elem[0]?.tagName
+  const tag = ($elem[0]?.tagName || $elem[0]?.name || '').toLowerCase()
   const headingSizes = {
     h1: 32,
     h2: 24,
@@ -248,7 +248,7 @@ export function getFontSize($elem) {
 export function isBold($elem) {
   if (!$elem) return false
 
-  const tag = $elem[0]?.tagName
+  const tag = ($elem[0]?.tagName || $elem[0]?.name || '').toLowerCase()
   if (['b', 'strong', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
     return true
   }
